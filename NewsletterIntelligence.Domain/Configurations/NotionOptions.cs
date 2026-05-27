@@ -9,7 +9,7 @@ public sealed record NotionOptions
 
     public required string AuthToken { get; init; }
     public required string ParentPageId { get; init; }
-    public Dictionary<string, NotionPropertyOptions> Properties { get; init; } = new();
+    public IEnumerable<NotionPropertyOptions> Properties { get; init; } = new List<NotionPropertyOptions>();
 }
 
 public sealed record NotionPropertyOptions
@@ -31,7 +31,7 @@ public sealed class NotionOptionsValidator : IValidateOptions<NotionOptions>
         if (string.IsNullOrWhiteSpace(options.ParentPageId))
             failures.Add($"{nameof(NotionOptions.ParentPageId)} is required.");
 
-        if (options.Properties.Count == 0)
+        if (!options.Properties.Any())
             failures.Add($"{nameof(NotionOptions.Properties)} must contain at least one mapping.");
 
         return failures.Count == 0

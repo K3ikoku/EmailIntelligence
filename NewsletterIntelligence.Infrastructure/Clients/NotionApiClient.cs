@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Options;
 using NewsletterIntelligence.Domain.Configurations;
+using NewsletterIntelligence.Domain.Entities;
 using NewsletterIntelligence.Domain.Enums;
 using Notion.Client;
 
@@ -16,48 +17,41 @@ public sealed class NotionApiClient(INotionClient client, IOptions<NotionOptions
     /// child blocks, and a value bag keyed by the same keys as <c>Notion:Properties</c>
     /// in configuration. Returns the URL of the created page.
     /// </summary>
-    public async Task<string> CreatePageAsync(
-        string title,
-        IEnumerable<IBlock> blocks,
-        Dictionary<string, object> properties)
+    public async Task<string> CreatePage(
+        NotionPageDraft draft)
     {
         var parameters = PagesCreateParametersBuilder
             .Create(new ParentPageInput { PageId = options.Value.ParentPageId })
             .Build();
 
-        parameters.Properties = BuildProperties(title, properties);
-        parameters.Children = blocks.ToList();
+        parameters.Properties = BuildProperties(draft.Properties);
+        parameters.Children = draft.Blocks.ToList();
 
         var page = await client.Pages.CreateAsync(parameters);
         return page.Url;
     }
 
-    private Dictionary<string, PropertyValue> BuildProperties(
-        string title,
-        Dictionary<string, object> values)
+    private Dictionary<string, PropertyValue> BuildProperties(IEnumerable<NotionPageProperty> propertiesList)
     {
-        var result = new Dictionary<string, PropertyValue>(values.Count + 1);
 
-        // Title is always handled separately and never read from `values`.
-        var titleMapping = options.Value.Properties.Values.FirstOrDefault(p => p.Type == NotionPropertyType.Title)
-                           ?? throw new InvalidOperationException("No property of type Title is configured.");
-
-        result[titleMapping.Name] = ToPropertyValue(NotionPropertyType.Title, title);
-
-        foreach (var (key, value) in values)
+        var properties = propertiesList.ToList();
+        var propertyDictionary = new Dictionary<string, PropertyValue>(properties.Count + 1);
+        foreach (var property in options.Value.Properties)
         {
-            if (!options.Value.Properties.TryGetValue(key, out var mapping))
-                throw new InvalidOperationException($"No Notion property mapping configured for key '{key}'.");
-
-            if (mapping.Type == NotionPropertyType.Title)
-                continue; // title is set above
-
-            result[mapping.Name] = ToPropertyValue(mapping.Type, value);
+            if (property.Value is not null)
+            {
+                propertyDictionary[property.Name] = ToPropertyValue(property.Type, property.Value);
+            }
+            else
+            {
+                var value = properties.FirstOrDefault(p => p.Name == property.Name).Value;
+                propertyDictionary[property.Name] = ToPropertyValue(property.Type, value);
+            }
         }
 
-        return result;
+        return propertyDictionary;
     }
-
+    
     private static PropertyValue ToPropertyValue(NotionPropertyType type, object value) => type switch
     {
         NotionPropertyType.Title or
