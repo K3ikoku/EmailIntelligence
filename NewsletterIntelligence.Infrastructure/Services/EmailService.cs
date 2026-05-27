@@ -18,9 +18,10 @@ public class EmailService(IMailKitClient mailKitClient) : IEmailService
             {
                 EmailSender = senderName,
                 Subject = email.Subject,
-                Sections = await EmailBodyExtractor.ExtractBySender(senderName, email),
+                Content = HtmlContentExtractor.Extract(email.HtmlBody),
                 DateReceived = email.Date,
-                EmailUuid = email.MessageId
+                EmailUuid = email.MessageId,
+                RawBody = email.HtmlBody
             });
         }
 

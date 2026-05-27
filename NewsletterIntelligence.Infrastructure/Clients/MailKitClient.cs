@@ -16,15 +16,15 @@ public class MailKitClient(ImapSettings settings) : IMailKitClient
         await client.AuthenticateAsync(settings.Username, settings.Password);
         
         // Open folder
-        var folder = await client.GetFolderAsync("Nyhetsbrev");
-        await folder.OpenAsync(FolderAccess.ReadOnly);
+        var emails = await client.GetFolderAsync(settings.TargetFolder);
+        await emails.OpenAsync(FolderAccess.ReadOnly);
         
         // Get all messages
-        var uids = await folder.SearchAsync(SearchQuery.All);
+        var uids = await emails.SearchAsync(SearchQuery.All);
 
         var messages = new List<MimeMessage>();
         foreach (var uid in uids)
-            messages.Add(await folder.GetMessageAsync(uid));
+            messages.Add(await emails.GetMessageAsync(uid));
 
         await client.DisconnectAsync(true);
         return messages;
