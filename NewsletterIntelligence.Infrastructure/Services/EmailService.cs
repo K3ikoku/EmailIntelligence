@@ -1,7 +1,6 @@
 ﻿using NewsletterIntelligence.Domain.Entities;
 using NewsletterIntelligence.Infrastructure.Clients.Interfaces;
 using NewsletterIntelligence.Infrastructure.Services.Interfaces;
-using NewsletterIntelligence.Infrastructure.Utilities;
 
 namespace NewsletterIntelligence.Infrastructure.Services;
 
@@ -18,10 +17,9 @@ public class EmailService(IMailKitClient mailKitClient) : IEmailService
             {
                 EmailSender = senderName,
                 Subject = email.Subject,
-                Content = HtmlContentExtractor.Extract(email.HtmlBody),
                 DateReceived = email.Date,
                 EmailUuid = email.MessageId,
-                RawBody = email.HtmlBody
+                EmailBody = email.HtmlBody
             });
         }
 

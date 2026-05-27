@@ -26,6 +26,8 @@ builder.Services.AddSingleton<IValidateOptions<NotionOptions>, NotionOptionsVali
 
 // Dependency Injection
 builder.Services.AddTransient<IEmailService, EmailService>();
+builder.Services.AddTransient<IEmailNotionMapperService, EmailNotionMapperService>();
+builder.Services.AddTransient<INewsletterPipelineService, NewsletterPipelineService>();
 builder.Services.AddTransient<IMailKitClient, MailKitClient>();
 
 builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<ImapSettings>>().Value);
@@ -38,10 +40,10 @@ builder.Services.AddSingleton<NotionApiClient>();
 // Build api for dev purposes
 var app = builder.Build();
 
-app.MapGet("/Newsletter", async (IEmailService emailService) =>
+app.MapGet("/Newsletter", async (INewsletterPipelineService newsletterService) =>
 {
-    var emails = await emailService.GetAndCleanEmails();
-    return Results.Ok(emails);
+    var result = await newsletterService.ProcessEmails();
+    return Results.Ok(result);
 });
 
 app.Run();
