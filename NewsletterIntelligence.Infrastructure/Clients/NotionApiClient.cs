@@ -33,25 +33,16 @@ public sealed class NotionApiClient(INotionClient client, IOptions<NotionOptions
 
     private Dictionary<string, PropertyValue> BuildProperties(IEnumerable<NotionPageProperty> propertiesList)
     {
-
         var properties = propertiesList.ToList();
         var propertyDictionary = new Dictionary<string, PropertyValue>(properties.Count + 1);
         foreach (var property in options.Value.Properties)
         {
-            if (property.Value is not null)
-            {
-                propertyDictionary[property.Name] = ToPropertyValue(property.Type, property.Value);
-            }
-            else
-            {
-                var value = properties.FirstOrDefault(p => p.Name == property.Name).Value;
-                propertyDictionary[property.Name] = ToPropertyValue(property.Type, value);
-            }
+            propertyDictionary[property.Name] = ToPropertyValue(property.Type, property.Value!);
         }
 
         return propertyDictionary;
     }
-    
+
     private static PropertyValue ToPropertyValue(NotionPropertyType type, object value) => type switch
     {
         NotionPropertyType.Title or

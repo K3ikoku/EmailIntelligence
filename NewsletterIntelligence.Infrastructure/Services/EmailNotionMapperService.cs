@@ -3,24 +3,32 @@ using NewsletterIntelligence.Domain.Configurations;
 using NewsletterIntelligence.Domain.Entities;
 using NewsletterIntelligence.Domain.Enums;
 using NewsletterIntelligence.Infrastructure.Services.Interfaces;
+using NewsletterIntelligence.Infrastructure.Utilities;
 using Notion.Client;
 
 namespace NewsletterIntelligence.Infrastructure.Services;
 
 public class EmailNotionMapperService(IOptions<NotionOptions> options) : IEmailNotionMapperService
 {
-    public async Task<NotionPageDraft> MapEmail(Email email)
+    public NotionPageDraft MapEmail(Email email)
     {
         var response = new NotionPageDraft
         {
-            Blocks = null,
-            Properties = await MapProperties(email) 
+            Blocks = MapBlocks(email),
+            Properties = MapProperties(email)
         };
 
         return response;
     }
-    
-    private async Task<IEnumerable<NotionPageProperty>> MapProperties(Email email)
+
+    private IEnumerable<IBlock> MapBlocks(Email email)
+    {
+        var mappedEmail = HtmlContentExtractor.Extract(email.EmailBody);
+        var blocks = mappedEmail.Blocks.Select(block => block.ToNotionBlock()).ToList();
+        return blocks;
+    }
+
+    private IEnumerable<NotionPageProperty> MapProperties(Email email)
     {
         var result = new List<NotionPageProperty>
         {
@@ -28,7 +36,8 @@ public class EmailNotionMapperService(IOptions<NotionOptions> options) : IEmailN
             new()
             {
                 Name = options.Value.Properties.First().Name,
-                Value = ToPropertyValue(NotionPropertyType.Title, $"{email.EmailSender} - {email.Subject} - {DateTimeOffset.UtcNow:yyyy-MM-dd}")
+                Value = ToPropertyValue(NotionPropertyType.Title,
+                    $"{email.EmailSender} - {email.Subject} - {DateTimeOffset.UtcNow:yyyy-MM-dd}")
             }
         };
         foreach (var property in options.Value.Properties.Skip(1))
@@ -73,7 +82,7 @@ public class EmailNotionMapperService(IOptions<NotionOptions> options) : IEmailN
                     throw new ArgumentOutOfRangeException(nameof(property.Type), $"{property.Type} is not supported.");
             }
         }
-        
+
         return result;
     }
 
@@ -83,7 +92,18 @@ public class EmailNotionMapperService(IOptions<NotionOptions> options) : IEmailN
         {
             "Front" => sender switch
             {
-                "TLDR IT" => nameof(Front.It),
+                "TLDR" or 
+                    "TLDR Dev" or 
+                    "TLDR IT" or 
+                    "TLDR Founders" or
+                    "TLDR Data" or
+                    "TLDR Fintech" or
+                    "TLDR DevOps" or
+                    "TLDR Crypto" or
+                    "TLDR Design" or
+                    "TLDR AI" => nameof(Front.It),
+                "Världens Historia" or "Illustrerad Vetenskap" => nameof(Front.Vetenskap),
+                "Geopolitics Daily" => nameof(Front.Nyheter),
                 _ => throw new ArgumentOutOfRangeException(nameof(sender), $"{sender} is not defined in mapper.")
             },
             "Källa" => sender,
@@ -100,7 +120,7 @@ public class EmailNotionMapperService(IOptions<NotionOptions> options) : IEmailN
             },
         NotionPropertyType.Date => new DatePropertyValue
         {
-            Date = new Date { Start = Convert.ToDateTime(value) }
+            Date = new Date { Start = (DateTimeOffset)value }
         },
         NotionPropertyType.Select => new SelectPropertyValue
         {
@@ -112,7 +132,7 @@ public class EmailNotionMapperService(IOptions<NotionOptions> options) : IEmailN
                 .Select(o => new SelectOption { Name = o })
                 .ToList()
         },
-        NotionPropertyType.Checkbox => new CheckboxPropertyValue { Checkbox = (bool)value },
+        NotionPropertyType.Checkbox => new CheckboxPropertyValue { Checkbox = bool.Parse(value as string ?? "") },
         NotionPropertyType.Url => new UrlPropertyValue { Url = value.ToString()! },
         NotionPropertyType.Email => new EmailPropertyValue { Email = value.ToString()! },
         NotionPropertyType.Number => new NumberPropertyValue { Number = Convert.ToDouble(value) },

@@ -11,5 +11,6 @@ public enum Front
     KroppOchSjäl,
     Oklassificerat,
     Pengaflöde,
-    Vetenskap
+    Vetenskap,
+    Nyheter
 }
