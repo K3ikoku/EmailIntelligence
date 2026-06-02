@@ -45,17 +45,21 @@ public sealed class NotionApiClient(INotionClient client, IOptions<NotionOptions
 
     private static PropertyValue ToPropertyValue(NotionPropertyType type, object value) => type switch
     {
-        NotionPropertyType.Title or
-            NotionPropertyType.Text => new RichTextPropertyValue
-            {
-                RichText = [new RichTextText { Text = new Text { Content = value.ToString()! } }]
-            },
+        NotionPropertyType.Title => new TitlePropertyValue
+        {
+            Title = [new RichTextText { Text = new Text { Content = value.ToString()! } }]
+        },
+        NotionPropertyType.Text => new RichTextPropertyValue
+        {
+            RichText = [new RichTextText { Text = new Text { Content = value.ToString()! } }]
+        },
         NotionPropertyType.Date => new DatePropertyValue
         {
             Date = new Date { Start = Convert.ToDateTime(value) }
         },
         NotionPropertyType.Select => new SelectPropertyValue
         {
+            
             Select = new SelectOption { Name = value.ToString()! }
         },
         NotionPropertyType.MultiSelect => new MultiSelectPropertyValue
