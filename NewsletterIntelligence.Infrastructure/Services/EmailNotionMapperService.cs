@@ -21,14 +21,14 @@ public class EmailNotionMapperService(IOptions<NotionOptions> options) : IEmailN
         return response;
     }
 
-    private IEnumerable<IBlock> MapBlocks(Email email)
+    private static List<IBlock> MapBlocks(Email email)
     {
         var mappedEmail = HtmlContentExtractor.Extract(email.EmailBody);
         var blocks = mappedEmail.Blocks.Select(block => block.ToNotionBlock()).ToList();
         return blocks;
     }
 
-    private IEnumerable<NotionPageProperty> MapProperties(Email email)
+    private List<NotionPageProperty> MapProperties(Email email)
     {
         var result = new List<NotionPageProperty>
         {
@@ -37,7 +37,7 @@ public class EmailNotionMapperService(IOptions<NotionOptions> options) : IEmailN
             {
                 Name = options.Value.Properties.First().Name,
                 Value = ToPropertyValue(NotionPropertyType.Title,
-                    $"{email.EmailSender} - {email.Subject} - {DateTimeOffset.UtcNow:yyyy-MM-dd}")
+                    $"{DateTimeOffset.UtcNow:yyyy-MM-dd} - {email.EmailSender} - {email.Subject}")
             }
         };
         foreach (var property in options.Value.Properties.Skip(1))
@@ -113,11 +113,14 @@ public class EmailNotionMapperService(IOptions<NotionOptions> options) : IEmailN
 
     private static PropertyValue ToPropertyValue(NotionPropertyType type, object value) => type switch
     {
-        NotionPropertyType.Title or
-            NotionPropertyType.Text => new RichTextPropertyValue
-            {
-                RichText = [new RichTextText { Text = new Text { Content = value.ToString()! } }]
-            },
+        NotionPropertyType.Title => new TitlePropertyValue
+        {
+            Title = [new RichTextText { Text = new Text { Content = value.ToString()! } }]
+        },
+        NotionPropertyType.Text => new RichTextPropertyValue
+        {
+            RichText = [new RichTextText { Text = new Text { Content = value.ToString()! } }]
+        },
         NotionPropertyType.Date => new DatePropertyValue
         {
             Date = new Date { Start = (DateTimeOffset)value }
