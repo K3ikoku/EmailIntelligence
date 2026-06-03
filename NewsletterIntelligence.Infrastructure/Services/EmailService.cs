@@ -29,6 +29,13 @@ public class EmailService(IMailKitClient mailKitClient) : IEmailService
 
     public async Task MoveProcessedEmailsAsync(IEnumerable<string> messageIds)
     {
-        var tmp = await mailKitClient.MoveToFolderAsync(messageIds); 
+        foreach (var messageId in messageIds)
+        {
+            var ids = await mailKitClient.MoveToFolderAsync(messageId);
+            if (ids.Any())
+            {
+                throw new Exception("Failed to move email to processed folder");
+            }
+        }
     }
 }

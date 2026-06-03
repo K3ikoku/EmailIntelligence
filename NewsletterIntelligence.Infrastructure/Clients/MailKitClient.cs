@@ -7,21 +7,15 @@ using NewsletterIntelligence.Infrastructure.Clients.Interfaces;
 
 namespace NewsletterIntelligence.Infrastructure.Clients;
 
-public class MailKitClient : IMailKitClient
+public class MailKitClient(ImapSettings settings) : IMailKitClient
 {
-    private readonly ImapClient _client;
-    private readonly ImapSettings _settings;
-    public MailKitClient(ImapSettings settings)
-    {
-        _settings = settings;
-        _client = new ImapClient();
-        _client.Connect(settings.Host, settings.Port, settings.UseSsl);
-        _client.Authenticate(settings.Username, settings.Password);
-    }
-    
     public async Task<IEnumerable<MimeMessage>> GetEmails()
     {
-        var folder = await _client.GetFolderAsync(_settings.RetrievingFolder);
+        var client = new ImapClient();
+        await client.ConnectAsync(settings.Host, settings.Port, settings.UseSsl);
+        await client.AuthenticateAsync(settings.Username, settings.Password);
+        
+        var folder = await client.GetFolderAsync(settings.RetrievingFolder);
         await folder.OpenAsync(FolderAccess.ReadOnly);
 
         var uids = await folder.SearchAsync(SearchQuery.All);
@@ -30,34 +24,37 @@ public class MailKitClient : IMailKitClient
         foreach (var uid in uids)
             messages.Add(await folder.GetMessageAsync(uid));
 
-        await _client.DisconnectAsync(true);
+        await client.DisconnectAsync(true);
         return messages;
     }
 
-    public async Task<IReadOnlyList<UniqueId>> MoveToFolderAsync(IEnumerable<string> messageIds)
+    public async Task<IEnumerable<UniqueId>> MoveToFolderAsync(string messageId)
     {
-        var source = await _client.GetFolderAsync(_settings.RetrievingFolder);
-        await source.OpenAsync(FolderAccess.ReadWrite);
-
-        var uniqueIds = messageIds.Select(UniqueId.Parse).ToList();
-        var existingSummaries =
-            await source.FetchAsync(uniqueIds, MessageSummaryItems.UniqueId);
-        var ids = existingSummaries.Select(s => s.UniqueId).ToList();
-
+        var client = new ImapClient();
+        await client.ConnectAsync(settings.Host, settings.Port, settings.UseSsl);
+        await client.AuthenticateAsync(settings.Username, settings.Password);
+        
         IMailFolder destination;
         try
         {
-            destination = await _client.GetFolderAsync(_settings.ProcessedFolder);
+            destination = await client.GetFolderAsync(settings.ProcessedFolder);
         }
         catch (FolderNotFoundException)
         {
-            destination = await _client.GetFolder(_client.PersonalNamespaces[0])
-                .CreateAsync(_settings.ProcessedFolder, true);
+            destination = await client.GetFolder(client.PersonalNamespaces[0])
+                .CreateAsync(settings.ProcessedFolder, true);
+        }
+        var source = await client.GetFolderAsync(settings.RetrievingFolder);
+        var uids = await source.SearchAsync(SearchQuery.Uids());
+
+        foreach (var uid in uids)
+        {
+            await source.MoveToAsync(uid, destination);
         }
 
-        await source.MoveToAsync(ids, destination);
-
-        await _client.DisconnectAsync(true);
-        return (ids);
+        await source.OpenAsync(FolderAccess.ReadWrite);
+        await source.MoveToAsync(uids, destination);
+        await client.DisconnectAsync(true);
+        return uids;
     }
 }
