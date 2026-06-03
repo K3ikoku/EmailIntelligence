@@ -13,7 +13,16 @@ public class NewsletterPipelineService(
     {
         var emails = await emailService.GetAndCleanEmails();
         var notionPageDrafts = emails.Select(mapperService.MapEmail).ToList();
-        var createdPages = notionPageDrafts.Select(notionClient.CreatePage).ToList();
+        var createdPages = new List<string>();
+        foreach (var draft in notionPageDrafts)
+        {
+            createdPages.Add(await notionClient.CreatePage(draft));
+        }
+
+        foreach (var page in createdPages)
+        {
+            
+        }
 
         return true;
     }
