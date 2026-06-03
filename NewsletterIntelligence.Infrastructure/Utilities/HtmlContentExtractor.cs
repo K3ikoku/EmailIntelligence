@@ -6,18 +6,6 @@ using NewsletterIntelligence.Domain.Enums;
 
 namespace NewsletterIntelligence.Infrastructure.Utilities;
 
-/// <summary>
-/// Parses raw email HTML and returns a flat list of Notion-friendly content blocks.
-/// Headings, paragraphs, lists, and links are kept; everything else
-/// (scripts, styles, images, hidden preview text, layout/wrapper tags) is stripped.
-///
-/// Loose inline text that sits directly inside layout containers — a very common
-/// pattern in table-based newsletter HTML where body copy lives in bare
-/// &lt;span&gt;/&lt;div&gt; rather than &lt;p&gt; — is captured: consecutive inline
-/// content is emitted as a paragraph, mirroring how CSS wraps inline content in
-/// anonymous block boxes. Sponsored sections are dropped via
-/// <see cref="HtmlExtractionOptions"/>.
-/// </summary>
 public static partial class HtmlContentExtractor
 {
     public static ExtractedContent Extract(string html, HtmlExtractionOptions? options = null)
@@ -48,18 +36,6 @@ public static partial class HtmlContentExtractor
         // single paragraph whenever a block-level element (or the end of the
         // node) interrupts it, so document order is preserved.
         var inline = new List<HtmlNode>();
-
-        void FlushInline()
-        {
-            if (inline.Count == 0)
-                return;
-
-            var runs = CollectAndMerge(inline);
-            inline.Clear();
-
-            if (runs.Count > 0)
-                AddBlock(new TextBlock { Type = ContentBlockType.Paragraph, RichText = runs }, options, blocks);
-        }
 
         foreach (var child in node.ChildNodes)
         {
@@ -117,6 +93,10 @@ public static partial class HtmlContentExtractor
                     AddListItems(child, ContentBlockType.NumberedListItem, options, blocks);
                     break;
 
+                case "img":
+                    TryAddImage(child, caption: null, blocks);
+                    break;
+
                 default:
                     // Container/layout element: recurse into its children.
                     Walk(child, blocks, options);
@@ -125,6 +105,25 @@ public static partial class HtmlContentExtractor
         }
 
         FlushInline();
+        return;
+
+        void FlushInline()
+        {
+            if (inline.Count == 0)
+                return;
+
+            // Linked/inline images (e.g. <a><img></a>) sit in the inline buffer;
+            // emit them as their own blocks before the paragraph text, since
+            // CollectNode deliberately drops images from rich text.
+            foreach (var buffered in inline)
+                ExtractImages(buffered, options, blocks);
+
+            var runs = CollectAndMerge(inline);
+            inline.Clear();
+
+            if (runs.Count > 0)
+                AddBlock(new TextBlock { Type = ContentBlockType.Paragraph, RichText = runs }, options, blocks);
+        }
     }
 
     private static void AddListItems(HtmlNode listNode, ContentBlockType itemType, HtmlExtractionOptions options, List<ContentBlock> blocks)
@@ -145,8 +144,15 @@ public static partial class HtmlContentExtractor
             {
                 if (nested.NodeType != HtmlNodeType.Element) continue;
                 var n = nested.Name.ToLowerInvariant();
-                if (n == "ul") AddListItems(nested, ContentBlockType.BulletedListItem, options, blocks);
-                else if (n == "ol") AddListItems(nested, ContentBlockType.NumberedListItem, options, blocks);
+                switch (n)
+                {
+                    case "ul":
+                        AddListItems(nested, ContentBlockType.BulletedListItem, options, blocks);
+                        break;
+                    case "ol":
+                        AddListItems(nested, ContentBlockType.NumberedListItem, options, blocks);
+                        break;
+                }
             }
         }
     }
@@ -159,9 +165,7 @@ public static partial class HtmlContentExtractor
 
         AddBlock(new TextBlock { Type = type, RichText = merged }, options, blocks);
     }
-
-    // ---- Sponsor / unwanted-content filtering -------------------------------
-
+    
     private static void AddBlock(ContentBlock block, HtmlExtractionOptions options, List<ContentBlock> blocks)
     {
         if (block is TextBlock text && IsIgnored(text, options))
@@ -195,7 +199,6 @@ public static partial class HtmlContentExtractor
             case "style":
             case "noscript":
             case "head":
-            case "img":
             case "svg":
             case "picture":
             case "video":
@@ -227,13 +230,9 @@ public static partial class HtmlContentExtractor
         return false;
     }
 
-    private static bool HasClass(string classAttr, string token)
-    {
-        foreach (var cls in classAttr.Split(' ', StringSplitOptions.RemoveEmptyEntries))
-            if (cls.Equals(token, StringComparison.OrdinalIgnoreCase))
-                return true;
-        return false;
-    }
+    private static bool HasClass(string classAttr, string token) => classAttr
+        .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+        .Any(cls => cls.Equals(token, StringComparison.OrdinalIgnoreCase));
 
     private static bool IsHidden(HtmlNode node)
     {
@@ -244,9 +243,7 @@ public static partial class HtmlContentExtractor
         var compact = style.Replace(" ", string.Empty).ToLowerInvariant();
         return compact.Contains("display:none") || compact.Contains("visibility:hidden");
     }
-
-    // ---- Rich-text collection ----------------------------------------------
-
+    
     private static IReadOnlyList<RichText> CollectAndMerge(HtmlNode node)
     {
         var runs = new List<RichText>();
@@ -322,14 +319,7 @@ public static partial class HtmlContentExtractor
 
     private static IReadOnlyList<RichText> Finalize(List<RichText> runs) =>
         MergeSameHref(CollapseWhitespace(runs));
-
-    /// <summary>
-    /// Collapses whitespace to single spaces across run boundaries, limits the
-    /// consecutive newlines produced by &lt;br&gt; to a single blank line, and
-    /// trims the block as a whole. Text-node whitespace (incl. newlines) was
-    /// already normalized to spaces, so only explicit &lt;br&gt; line breaks
-    /// survive as '\n' here.
-    /// </summary>
+    
     private static List<RichText> CollapseWhitespace(List<RichText> runs)
     {
         var result = new List<RichText>(runs.Count);
@@ -393,8 +383,26 @@ public static partial class HtmlContentExtractor
         }
         return result;
     }
+    
+    private static void ExtractImages(HtmlNode node, HtmlExtractionOptions options, List<ContentBlock> blocks)
+    {
+        if (node.NodeType != HtmlNodeType.Element)
+            return;
 
-    // ---- Image support (currently unused; images are stripped) --------------
+        var name = node.Name.ToLowerInvariant();
+
+        if (name == "img")
+        {
+            TryAddImage(node, caption: null, blocks);
+            return;
+        }
+
+        if (ShouldSkipElement(name, node, options))
+            return;
+
+        foreach (var child in node.ChildNodes)
+            ExtractImages(child, options, blocks);
+    }
 
     private static void TryAddImage(HtmlNode img, IReadOnlyList<RichText>? caption, List<ContentBlock> blocks)
     {
@@ -427,15 +435,9 @@ public static partial class HtmlContentExtractor
         });
     }
 
-    private static string? FirstNonEmpty(params string?[] values)
-    {
-        foreach (var v in values)
-            if (!string.IsNullOrWhiteSpace(v)) return v;
-        return null;
-    }
-
-    // ---- Element classification & small helpers -----------------------------
-
+    private static string? FirstNonEmpty(params string?[] values) =>
+        values.FirstOrDefault(v => !string.IsNullOrWhiteSpace(v));
+    
     private static bool IsInline(string name) => name switch
     {
         "a" or "span" or "strong" or "b" or "em" or "i" or "u" or "s" or "strike" or

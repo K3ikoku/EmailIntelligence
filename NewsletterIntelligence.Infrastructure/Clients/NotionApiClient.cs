@@ -5,37 +5,19 @@ using Notion.Client;
 
 namespace NewsletterIntelligence.Infrastructure.Clients;
 
-/// <summary>
-/// Creates Notion pages from structured content using config-driven property mapping.
-/// </summary>
 public sealed class NotionApiClient(INotionClient client, IOptions<NotionOptions> options)
 {
 
-    /// <summary>
-    /// Creates a new page under the configured parent, with the given title,
-    /// child blocks, and a value bag keyed by the same keys as <c>Notion:Properties</c>
-    /// in configuration. Returns the URL of the created page.
-    /// </summary>
-    public async Task<string> CreatePage(
-        NotionPageDraft draft)
+    public async Task<string> CreatePage(NotionPageDraft draft)
     {
         var parameters = PagesCreateParametersBuilder
             .Create(new DatabaseParentInput() { DatabaseId = options.Value.DatabaseId })
             .Build();
-        
+
         parameters.Properties = BuildProperties(draft.Properties);
         parameters.Children = draft.Blocks.ToList();
-        
-        Page page;
-        try
-        {
-            page = await client.Pages.CreateAsync(parameters);
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }
+
+        var page = await client.Pages.CreateAsync(parameters);
 
         return page.Url;
     }
