@@ -1,4 +1,3 @@
-using NewsletterIntelligence.Domain.Entities;
 using NewsletterIntelligence.Infrastructure.Clients;
 using NewsletterIntelligence.Infrastructure.Services.Interfaces;
 
@@ -11,18 +10,10 @@ public class NewsletterPipelineService(
 {
     public async Task<bool> ProcessEmails()
     {
-        var emails = await emailService.GetAndCleanEmails();
+        var emails = (await emailService.GetAndCleanEmails()).ToList();
         var notionPageDrafts = emails.Select(mapperService.MapEmail).ToList();
-        var createdPages = new List<string>();
-        foreach (var draft in notionPageDrafts)
-        {
-            createdPages.Add(await notionClient.CreatePage(draft));
-        }
-
-        foreach (var page in createdPages)
-        {
-            
-        }
+        // await Task.WhenAll(notionPageDrafts.Select(notionClient.CreatePage));
+        await emailService.MoveProcessedEmailsAsync(emails.Select(e => e.MessageId));
 
         return true;
     }

@@ -16,7 +16,6 @@ public sealed class NotionApiClient(INotionClient client, IOptions<NotionOptions
 
         parameters.Properties = BuildProperties(draft.Properties);
         parameters.Children = draft.Blocks.ToList();
-
         var page = await client.Pages.CreateAsync(parameters);
 
         return page.Url;

@@ -7,26 +7,57 @@ using NewsletterIntelligence.Infrastructure.Clients.Interfaces;
 
 namespace NewsletterIntelligence.Infrastructure.Clients;
 
-public class MailKitClient(ImapSettings settings) : IMailKitClient
+public class MailKitClient : IMailKitClient
 {
+    private readonly ImapClient _client;
+    private readonly ImapSettings _settings;
+    public MailKitClient(ImapSettings settings)
+    {
+        _settings = settings;
+        _client = new ImapClient();
+        _client.Connect(settings.Host, settings.Port, settings.UseSsl);
+        _client.Authenticate(settings.Username, settings.Password);
+    }
+    
     public async Task<IEnumerable<MimeMessage>> GetEmails()
     {
-        using var client = new ImapClient();
-        await client.ConnectAsync(settings.Host, settings.Port, settings.UseSsl);
-        await client.AuthenticateAsync(settings.Username, settings.Password);
-        
-        // Open folder
-        var emails = await client.GetFolderAsync(settings.TargetFolder);
-        await emails.OpenAsync(FolderAccess.ReadOnly);
-        
-        // Get all messages
-        var uids = await emails.SearchAsync(SearchQuery.All);
+        var folder = await _client.GetFolderAsync(_settings.RetrievingFolder);
+        await folder.OpenAsync(FolderAccess.ReadOnly);
+
+        var uids = await folder.SearchAsync(SearchQuery.All);
 
         var messages = new List<MimeMessage>();
         foreach (var uid in uids)
-            messages.Add(await emails.GetMessageAsync(uid));
+            messages.Add(await folder.GetMessageAsync(uid));
 
-        await client.DisconnectAsync(true);
+        await _client.DisconnectAsync(true);
         return messages;
+    }
+
+    public async Task<IReadOnlyList<UniqueId>> MoveToFolderAsync(IEnumerable<string> messageIds)
+    {
+        var source = await _client.GetFolderAsync(_settings.RetrievingFolder);
+        await source.OpenAsync(FolderAccess.ReadWrite);
+
+        var uniqueIds = messageIds.Select(UniqueId.Parse).ToList();
+        var existingSummaries =
+            await source.FetchAsync(uniqueIds, MessageSummaryItems.UniqueId);
+        var ids = existingSummaries.Select(s => s.UniqueId).ToList();
+
+        IMailFolder destination;
+        try
+        {
+            destination = await _client.GetFolderAsync(_settings.ProcessedFolder);
+        }
+        catch (FolderNotFoundException)
+        {
+            destination = await _client.GetFolder(_client.PersonalNamespaces[0])
+                .CreateAsync(_settings.ProcessedFolder, true);
+        }
+
+        await source.MoveToAsync(ids, destination);
+
+        await _client.DisconnectAsync(true);
+        return (ids);
     }
 }

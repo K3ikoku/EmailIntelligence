@@ -1,4 +1,5 @@
-﻿using NewsletterIntelligence.Domain.Entities;
+﻿using MailKit;
+using NewsletterIntelligence.Domain.Entities;
 using NewsletterIntelligence.Infrastructure.Clients.Interfaces;
 using NewsletterIntelligence.Infrastructure.Services.Interfaces;
 
@@ -18,11 +19,16 @@ public class EmailService(IMailKitClient mailKitClient) : IEmailService
                 EmailSender = senderName,
                 Subject = email.Subject,
                 DateReceived = email.Date,
-                EmailUuid = email.MessageId,
+                MessageId = email.MessageId,
                 EmailBody = email.HtmlBody
             });
         }
 
         return cleanedEmails;
+    }
+
+    public async Task MoveProcessedEmailsAsync(IEnumerable<string> messageIds)
+    {
+        var tmp = await mailKitClient.MoveToFolderAsync(messageIds); 
     }
 }
