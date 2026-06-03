@@ -20,9 +20,12 @@ public sealed class NotionApiClient(INotionClient client, IOptions<NotionOptions
         NotionPageDraft draft)
     {
         var parameters = PagesCreateParametersBuilder
-            .Create(new ParentPageInput { PageId = options.Value.ParentPageId })
+            .Create(new DatabaseParentInput() { DatabaseId = options.Value.DatabaseId })
             .Build();
-
+        
+        parameters.Properties = BuildProperties(draft.Properties);
+        parameters.Children = draft.Blocks.ToList();
+        
         Page page;
         try
         {
@@ -33,9 +36,6 @@ public sealed class NotionApiClient(INotionClient client, IOptions<NotionOptions
             Console.WriteLine(e);
             throw;
         }
-
-        parameters.Properties = BuildProperties(draft.Properties);
-        parameters.Children = draft.Blocks.ToList();
 
         return page.Url;
     }

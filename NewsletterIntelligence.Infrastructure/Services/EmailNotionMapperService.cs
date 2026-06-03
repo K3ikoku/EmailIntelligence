@@ -107,7 +107,9 @@ public class EmailNotionMapperService(IOptions<NotionOptions> options) : IEmailN
                 _ => throw new ArgumentOutOfRangeException(nameof(sender), $"{sender} is not defined in mapper.")
             },
             "Källa" => sender,
+            "Tanketyp" => "Nyhetsbrev",
             _ => throw new ArgumentOutOfRangeException(nameof(property), $"{property.Name} is not defined in mapper.")
+            
         };
     }
 
