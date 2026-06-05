@@ -1,5 +1,4 @@
-﻿using MailKit;
-using NewsletterIntelligence.Domain.Entities;
+﻿using NewsletterIntelligence.Domain.Entities;
 using NewsletterIntelligence.Infrastructure.Clients.Interfaces;
 using NewsletterIntelligence.Infrastructure.Services.Interfaces;
 
@@ -29,13 +28,10 @@ public class EmailService(IMailKitClient mailKitClient) : IEmailService
 
     public async Task MoveProcessedEmailsAsync(IEnumerable<string> messageIds)
     {
-        foreach (var messageId in messageIds)
+        var ids = await mailKitClient.MoveToFolderAsync(messageIds);
+        if (!ids.Any())
         {
-            var ids = await mailKitClient.MoveToFolderAsync(messageId);
-            if (ids.Any())
-            {
-                throw new Exception("Failed to move email to processed folder");
-            }
+            throw new Exception("Failed to move email to processed folder");
         }
     }
 }

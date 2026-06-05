@@ -28,32 +28,33 @@ public class MailKitClient(ImapSettings settings) : IMailKitClient
         return messages;
     }
 
-    public async Task<IEnumerable<UniqueId>> MoveToFolderAsync(string messageId)
+    public async Task<IEnumerable<UniqueId>> MoveToFolderAsync(IEnumerable<string> messageIds)
     {
         var client = new ImapClient();
         await client.ConnectAsync(settings.Host, settings.Port, settings.UseSsl);
         await client.AuthenticateAsync(settings.Username, settings.Password);
-        
-        IMailFolder destination;
+
+        IMailFolder destinationFolder;
         try
         {
-            destination = await client.GetFolderAsync(settings.ProcessedFolder);
+            destinationFolder = await client.GetFolderAsync(settings.ProcessedFolder);
         }
         catch (FolderNotFoundException)
         {
-            destination = await client.GetFolder(client.PersonalNamespaces[0])
+            destinationFolder = await client.GetFolder(client.PersonalNamespaces[0])
                 .CreateAsync(settings.ProcessedFolder, true);
         }
-        var source = await client.GetFolderAsync(settings.RetrievingFolder);
-        var uids = await source.SearchAsync(SearchQuery.Uids());
+
+        var sourceFolder = await client.GetFolderAsync(settings.RetrievingFolder);
+        await sourceFolder.OpenAsync(FolderAccess.ReadWrite);
+
+        var query = messageIds.Select(x => (SearchQuery)SearchQuery.HeaderContains("Message-Id", x))
+            .Aggregate((current, next) => current.Or(next));
+        var uids = await sourceFolder.SearchAsync(query);
 
         foreach (var uid in uids)
-        {
-            await source.MoveToAsync(uid, destination);
-        }
+            await sourceFolder.MoveToAsync(uid, destinationFolder);
 
-        await source.OpenAsync(FolderAccess.ReadWrite);
-        await source.MoveToAsync(uids, destination);
         await client.DisconnectAsync(true);
         return uids;
     }

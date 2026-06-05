@@ -1,7 +1,4 @@
-﻿using System.Xml;
-using NewsletterIntelligence.Domain.Entities.Content;
-
-namespace NewsletterIntelligence.Domain.Entities;
+﻿namespace NewsletterIntelligence.Domain.Entities;
 
 public sealed record Email
 {
