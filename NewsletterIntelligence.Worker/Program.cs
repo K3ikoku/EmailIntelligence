@@ -28,6 +28,7 @@ builder.Services.AddSingleton<IValidateOptions<NotionOptions>, NotionOptionsVali
 builder.Services.AddTransient<IEmailService, EmailService>();
 builder.Services.AddTransient<IEmailNotionMapperService, EmailNotionMapperService>();
 builder.Services.AddTransient<INewsletterPipelineService, NewsletterPipelineService>();
+builder.Services.AddTransient<INotionService, NotionService>();
 builder.Services.AddTransient<IMailKitClient, MailKitClient>();
 
 builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<ImapSettings>>().Value);
@@ -35,7 +36,7 @@ builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<ImapSettings>
 // Notion
 builder.Services.AddNotionClient(options =>
     options.AuthToken = builder.Configuration["Notion:AuthToken"]!);
-builder.Services.AddSingleton<NotionApiClient>();
+builder.Services.AddSingleton<INotionApiClient, NotionApiClient>();
 
 // Build api for dev purposes
 var app = builder.Build();

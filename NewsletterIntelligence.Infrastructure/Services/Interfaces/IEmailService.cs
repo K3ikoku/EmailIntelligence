@@ -1,5 +1,4 @@
-﻿using System.Xml;
-using NewsletterIntelligence.Domain.Entities;
+﻿using NewsletterIntelligence.Domain.Entities;
 
 namespace NewsletterIntelligence.Infrastructure.Services.Interfaces;
 

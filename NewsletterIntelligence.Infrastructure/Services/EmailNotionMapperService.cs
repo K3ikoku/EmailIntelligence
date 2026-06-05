@@ -12,10 +12,13 @@ public class EmailNotionMapperService(IOptions<NotionOptions> options) : IEmailN
 {
     public NotionPageDraft MapEmail(Email email)
     {
+        var title = $"{DateTimeOffset.UtcNow:yyyy-MM-dd} - {email.EmailSender} - {email.Subject}";
         var response = new NotionPageDraft
         {
+            Title = title,
+            EmailId = email.MessageId,
             Blocks = MapBlocks(email),
-            Properties = MapProperties(email)
+            Properties = MapProperties(email, title)
         };
 
         return response;
@@ -28,7 +31,7 @@ public class EmailNotionMapperService(IOptions<NotionOptions> options) : IEmailN
         return blocks;
     }
 
-    private List<NotionPageProperty> MapProperties(Email email)
+    private List<NotionPageProperty> MapProperties(Email email, string title)
     {
         var result = new List<NotionPageProperty>
         {
@@ -36,8 +39,7 @@ public class EmailNotionMapperService(IOptions<NotionOptions> options) : IEmailN
             new()
             {
                 Name = options.Value.Properties.First().Name,
-                Value = ToPropertyValue(NotionPropertyType.Title,
-                    $"{DateTimeOffset.UtcNow:yyyy-MM-dd} - {email.EmailSender} - {email.Subject}")
+                Value = ToPropertyValue(NotionPropertyType.Title, $"{title}")
             }
         };
         foreach (var property in options.Value.Properties.Skip(1))
