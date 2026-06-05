@@ -1,4 +1,0 @@
-@host = http://localhost:5181
-
-GET {{host}}/Newsletter
-Accept: application/json

@@ -34,3 +34,6 @@ Desktop.ini
 .DS_Store
 
 appsettings.Development.json
+
+# Azure Functions (local settings may contain secrets / storage connection strings)
+local.settings.json

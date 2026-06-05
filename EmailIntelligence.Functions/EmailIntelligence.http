@@ -1,0 +1,5 @@
+@host = http://localhost:7071
+
+### Run the email -> Notion pipeline on demand
+POST {{host}}/api/newsletter/run
+Accept: application/json

@@ -1,1 +1,1 @@
-# NewsletterIntelligence
+# EmailIntelligence

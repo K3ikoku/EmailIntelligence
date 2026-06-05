@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "EmailIntelligence.Functions": {
+      "commandName": "Project",
+      "launchBrowser": false,
+      "environmentVariables": {
+        "AZURE_FUNCTIONS_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}
