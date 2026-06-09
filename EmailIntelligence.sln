@@ -9,6 +9,15 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EmailIntelligence.Infrastru
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EmailIntelligence.Functions", "EmailIntelligence.Functions\EmailIntelligence.Functions.csproj", "{CC27DB09-66FC-487A-9167-DDC81CEEF69A}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionItems", "{0DA15087-9E5A-44A4-BE06-5656908DC680}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		README.md = README.md
+		EmailIntelligence.Functions\EmailIntelligence.http = EmailIntelligence.Functions\EmailIntelligence.http
+		EmailIntelligence.Functions\host.json = EmailIntelligence.Functions\host.json
+		EmailIntelligence.Functions\local.settings.json = EmailIntelligence.Functions\local.settings.json
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
