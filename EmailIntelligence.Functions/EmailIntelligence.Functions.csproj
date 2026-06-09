@@ -19,7 +19,10 @@
         <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Timer" Version="4.3.1" />
         <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore" Version="2.1.0" />
         <PackageReference Include="Microsoft.Azure.Functions.Worker.ApplicationInsights" Version="2.51.0" />
-        <PackageReference Include="Microsoft.ApplicationInsights.WorkerService" Version="3.1.2" />
+        <!-- Pinned: must match Worker.ApplicationInsights 2.51.0 (AI 2.23.0). AI 3.x crashes the
+             isolated worker with a TypeLoadException on ITelemetryInitializer. Do NOT bump until
+             the Functions worker AI extension supports AI 3.x. -->
+        <PackageReference Include="Microsoft.ApplicationInsights.WorkerService" Version="2.23.0" />
     </ItemGroup>
 
     <ItemGroup>

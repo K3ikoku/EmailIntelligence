@@ -11,7 +11,11 @@
       <PackageReference Include="Azure.Identity" Version="1.21.0" />
       <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
       <PackageReference Include="MailKit" Version="4.14.1" />
-      <PackageReference Include="Microsoft.ApplicationInsights" Version="3.1.2" />
+      <!-- Pinned: AI 3.x is incompatible with the Functions isolated worker AI stack
+           (Worker.ApplicationInsights 2.51.0 -> PerfCounterCollector 2.23.0) and crashes the
+           worker with a TypeLoadException on ITelemetryInitializer. Do NOT bump (e.g. via
+           "Update all NuGet packages") until the Functions worker AI extension supports AI 3.x. -->
+      <PackageReference Include="Microsoft.ApplicationInsights" Version="2.23.0" />
       <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.61.0" />
       <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.9" />
       <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.9" />
