@@ -4,11 +4,6 @@ using Microsoft.Extensions.Logging;
 
 namespace EmailIntelligence.Functions.Functions;
 
-/// <summary>
-/// Runs the email → Notion pipeline on a schedule. The CRON expression comes from the
-/// <c>NewsletterSchedule</c> app setting (see local.settings.json), defaulting in docs to
-/// every 6 hours: <c>0 0 */6 * * *</c>.
-/// </summary>
 public sealed class NewsletterTimerFunction(
     INewsletterPipelineService pipeline,
     ILogger<NewsletterTimerFunction> logger)

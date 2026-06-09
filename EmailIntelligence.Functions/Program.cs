@@ -1,11 +1,15 @@
 using EmailIntelligence.Domain.Configurations;
 using EmailIntelligence.Domain.Entities;
+using EmailIntelligence.Functions.OpenApi;
 using EmailIntelligence.Infrastructure.Clients;
 using EmailIntelligence.Infrastructure.Clients.Interfaces;
 using EmailIntelligence.Infrastructure.Services;
 using EmailIntelligence.Infrastructure.Services.Interfaces;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Builder;
+using Microsoft.Azure.Functions.Worker.Extensions.OpenApi;
+using Microsoft.Azure.Functions.Worker.Extensions.OpenApi.Functions;
+using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Abstractions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -13,12 +17,8 @@ using Microsoft.Extensions.Options;
 
 var builder = FunctionsApplication.CreateBuilder(args);
 
-// ASP.NET Core integration so HTTP triggers can use HttpRequest/IActionResult.
 builder.ConfigureFunctionsWebApplication();
 
-// Structured, non-secret configuration (e.g. Notion:Properties). Secrets come from app
-// settings (Azure) or appsettings.Development.json / user-secrets (local). Trigger
-// bindings like %NewsletterSchedule% are resolved by the host from local.settings.json.
 builder.Configuration
     .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: false);
@@ -47,9 +47,7 @@ builder.Services.AddNotionClient(options =>
     options.AuthToken = builder.Configuration["Notion:AuthToken"]!);
 builder.Services.AddSingleton<INotionApiClient, NotionApiClient>();
 
-// Cosmos persistence — registered only when configured, so the email pipeline runs
-// without it. Provide Cosmos:AccountEndpoint (managed identity) or Cosmos:ConnectionString
-// (local/emulator) to activate IRepository<ProcessedEmail> and the startup initializer.
+// Cosmos persistence
 if (!string.IsNullOrWhiteSpace(builder.Configuration["Cosmos:AccountEndpoint"]) ||
     !string.IsNullOrWhiteSpace(builder.Configuration["Cosmos:ConnectionString"]))
 {
@@ -57,5 +55,10 @@ if (!string.IsNullOrWhiteSpace(builder.Configuration["Cosmos:AccountEndpoint"]) 
         .AddCosmosPersistence(builder.Configuration)
         .AddCosmosContainer<ProcessedEmail>("processed-emails", "/sender");
 }
+
+// OpenAPI 
+builder.Services.AddSingleton<IOpenApiConfigurationOptions, OpenApiConfigurationOptions>();
+builder.Services.AddSingleton<IOpenApiHttpTriggerContext, OpenApiHttpTriggerContext>();
+builder.Services.AddSingleton<IOpenApiTriggerFunction, OpenApiTriggerFunction>();
 
 builder.Build().Run();

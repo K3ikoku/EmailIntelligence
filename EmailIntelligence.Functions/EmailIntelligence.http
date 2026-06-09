@@ -3,3 +3,10 @@
 ### Run the email -> Notion pipeline on demand
 POST {{host}}/api/newsletter/run
 Accept: application/json
+
+### Swagger UI (open in a browser)
+GET {{host}}/api/swagger/ui
+
+### OpenAPI v3 document
+GET {{host}}/api/openapi/v3.json
+Accept: application/json
