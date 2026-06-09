@@ -1,0 +1,85 @@
+name: Build & Deploy (Azure Functions)
+
+# Builds on every push/PR to main (CI gate) and deploys to Azure on push to
+# main or a manual run. Authentication to Azure uses OIDC (federated identity),
+# so no publish profile or password is ever stored in GitHub.
+#
+# Required GitHub repository secrets (Settings > Secrets and variables > Actions):
+#   AZURE_CLIENT_ID         - App registration (client) ID
+#   AZURE_TENANT_ID         - Microsoft Entra tenant ID
+#   AZURE_SUBSCRIPTION_ID   - Azure subscription ID
+# See docs/DEPLOYMENT.md for where to find each value.
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  FUNCTIONS_PROJECT: 'EmailIntelligence.Functions/EmailIntelligence.Functions.csproj'
+  # Not a secret - change this if you named your Function App differently.
+  AZURE_FUNCTIONAPP_NAME: 'func-emailintelligence'
+  PUBLISH_DIR: ${{ github.workspace }}/publish
+
+jobs:
+  build:
+    name: Build & publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET ${{ env.DOTNET_VERSION }}
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Publish
+        run: dotnet publish ${{ env.FUNCTIONS_PROJECT }} --configuration Release --no-restore --output ${{ env.PUBLISH_DIR }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: functionapp
+          path: ${{ env.PUBLISH_DIR }}
+
+  deploy:
+    name: Deploy to Azure
+    needs: build
+    runs-on: ubuntu-latest
+    # Don't deploy from pull requests - only on push to main or manual runs.
+    if: github.event_name != 'pull_request'
+    permissions:
+      contents: read
+      id-token: write   # required for OIDC login to Azure
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: functionapp
+          path: ${{ env.PUBLISH_DIR }}
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy to Azure Functions
+        uses: Azure/functions-action@v1
+        with:
+          app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
+          package: ${{ env.PUBLISH_DIR }}
