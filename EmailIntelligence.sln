@@ -16,7 +16,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionIt
 		EmailIntelligence.Functions\EmailIntelligence.http = EmailIntelligence.Functions\EmailIntelligence.http
 		EmailIntelligence.Functions\host.json = EmailIntelligence.Functions\host.json
 		EmailIntelligence.Functions\local.settings.json = EmailIntelligence.Functions\local.settings.json
-		.github\workflows\deploy.yml = .github\workflows\deploy.yml
+		.github\workflows\main_func-emailintelligence.yml = .github\workflows\main_func-emailintelligence.yml
 	EndProjectSection
 EndProject
 Global
