@@ -19,6 +19,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionIt
 		.github\workflows\main_func-emailintelligence.yml = .github\workflows\main_func-emailintelligence.yml
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EmailIntelligence.Tests", "EmailIntelligence.Tests\EmailIntelligence.Tests.csproj", "{06F3850F-F44E-4B18-B9F0-D2D1D4F14E46}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -65,6 +67,18 @@ Global
 		{CC27DB09-66FC-487A-9167-DDC81CEEF69A}.Release|x64.Build.0 = Release|Any CPU
 		{CC27DB09-66FC-487A-9167-DDC81CEEF69A}.Release|x86.ActiveCfg = Release|Any CPU
 		{CC27DB09-66FC-487A-9167-DDC81CEEF69A}.Release|x86.Build.0 = Release|Any CPU
+		{06F3850F-F44E-4B18-B9F0-D2D1D4F14E46}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{06F3850F-F44E-4B18-B9F0-D2D1D4F14E46}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{06F3850F-F44E-4B18-B9F0-D2D1D4F14E46}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{06F3850F-F44E-4B18-B9F0-D2D1D4F14E46}.Debug|x64.Build.0 = Debug|Any CPU
+		{06F3850F-F44E-4B18-B9F0-D2D1D4F14E46}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{06F3850F-F44E-4B18-B9F0-D2D1D4F14E46}.Debug|x86.Build.0 = Debug|Any CPU
+		{06F3850F-F44E-4B18-B9F0-D2D1D4F14E46}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{06F3850F-F44E-4B18-B9F0-D2D1D4F14E46}.Release|Any CPU.Build.0 = Release|Any CPU
+		{06F3850F-F44E-4B18-B9F0-D2D1D4F14E46}.Release|x64.ActiveCfg = Release|Any CPU
+		{06F3850F-F44E-4B18-B9F0-D2D1D4F14E46}.Release|x64.Build.0 = Release|Any CPU
+		{06F3850F-F44E-4B18-B9F0-D2D1D4F14E46}.Release|x86.ActiveCfg = Release|Any CPU
+		{06F3850F-F44E-4B18-B9F0-D2D1D4F14E46}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

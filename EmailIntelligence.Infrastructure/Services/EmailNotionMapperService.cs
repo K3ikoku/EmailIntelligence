@@ -94,9 +94,9 @@ public class EmailNotionMapperService(IOptions<NotionOptions> options) : IEmailN
         {
             "Front" => sender switch
             {
-                "TLDR" or 
-                    "TLDR Dev" or 
-                    "TLDR IT" or 
+                "TLDR" or
+                    "TLDR Dev" or
+                    "TLDR IT" or
                     "TLDR Founders" or
                     "TLDR Data" or
                     "TLDR Fintech" or
@@ -106,7 +106,7 @@ public class EmailNotionMapperService(IOptions<NotionOptions> options) : IEmailN
                     "TLDR AI" => nameof(Front.It),
                 "Världens Historia" or "Illustrerad Vetenskap" => nameof(Front.Vetenskap),
                 "Geopolitics Daily" => nameof(Front.Nyheter),
-                _ => throw new ArgumentOutOfRangeException(nameof(sender), $"{sender} is not defined in mapper.")
+                _ => nameof(Front.Oklassificerat)
             },
             "Källa" => sender,
             "Tanketyp" => "Nyhetsbrev",
