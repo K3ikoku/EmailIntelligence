@@ -7,18 +7,48 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 env:
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.' # set this to the path to your web app project, defaults to the repository root
-  DOTNET_VERSION: '10.0.x' # set this to the dotnet version to use
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.'
+  DOTNET_VERSION: '10.0.x'
 
 jobs:
-  build-and-deploy:
+  test:
+    name: Build & test
     runs-on: ubuntu-latest
     permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
+      contents: read
+
+    steps:
+      - name: 'Checkout GitHub Action'
+        uses: actions/checkout@v4
+
+      - name: Setup DotNet ${{ env.DOTNET_VERSION }} Environment
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore EmailIntelligence.sln
+
+      - name: Build
+        run: dotnet build EmailIntelligence.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test EmailIntelligence.sln --configuration Release --no-build --verbosity normal
+
+  build-and-deploy:
+    name: Deploy to Azure
+    runs-on: ubuntu-latest
+    needs: test
+    if: ${{ github.event_name != 'pull_request' }}
+    permissions:
+      id-token: write
+      contents: read
 
     steps:
       - name: 'Checkout GitHub Action'
@@ -32,7 +62,7 @@ jobs:
       - name: 'Publish Functions project'
         shell: bash
         run: dotnet publish EmailIntelligence.Functions/EmailIntelligence.Functions.csproj --configuration Release --output ./output
-      
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -47,4 +77,3 @@ jobs:
           app-name: 'func-emailintelligence'
           slot-name: 'Production'
           package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'
-          
