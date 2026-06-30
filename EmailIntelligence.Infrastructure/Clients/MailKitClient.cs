@@ -30,7 +30,15 @@ public class MailKitClient(ImapSettings settings) : IMailKitClient
 
     public async Task<IEnumerable<UniqueId>> MoveToFolderAsync(IEnumerable<string> messageIds)
     {
-        var client = new ImapClient();
+        var wanted = messageIds
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Select(NormalizeMessageId)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        if (wanted.Count == 0)
+            return [];
+
+        using var client = new ImapClient();
         await client.ConnectAsync(settings.Host, settings.Port, settings.UseSsl);
         await client.AuthenticateAsync(settings.Username, settings.Password);
 
@@ -47,15 +55,22 @@ public class MailKitClient(ImapSettings settings) : IMailKitClient
 
         var sourceFolder = await client.GetFolderAsync(settings.RetrievingFolder);
         await sourceFolder.OpenAsync(FolderAccess.ReadWrite);
+        
+        var summaries = await sourceFolder.FetchAsync(
+            0, -1, MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope);
 
-        var query = messageIds.Select(x => (SearchQuery)SearchQuery.HeaderContains("Message-Id", x))
-            .Aggregate((current, next) => current.Or(next));
-        var uids = await sourceFolder.SearchAsync(query);
+        var uids = summaries
+            .Where(s => s.Envelope?.MessageId is { } id && wanted.Contains(NormalizeMessageId(id)))
+            .Select(s => s.UniqueId)
+            .ToList();
 
-        foreach (var uid in uids)
-            await sourceFolder.MoveToAsync(uid, destinationFolder);
+        if (uids.Count > 0)
+            await sourceFolder.MoveToAsync(uids, destinationFolder);
 
         await client.DisconnectAsync(true);
         return uids;
     }
+
+    private static string NormalizeMessageId(string messageId) =>
+        messageId.Trim().Trim('<', '>');
 }

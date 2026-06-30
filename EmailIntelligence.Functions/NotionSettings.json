@@ -1,0 +1,41 @@
+{
+  "Notion": {
+    "Properties": [
+      {
+        "Name": "Titel",
+        "Type": "title",
+        "Value": null
+      },
+      {
+        "Name": "Skapad",
+        "Type": "date",
+        "Value": null
+      },
+      {
+        "Name": "Front",
+        "Type": "select",
+        "Value": null
+      },
+      {
+        "Name": "Källa",
+        "Type": "select",
+        "Value": null
+      },
+      {
+        "Name": "Arkiverad",
+        "Type": "checkbox",
+        "Value": "false"
+      },
+      {
+        "Name": "Behöver behandlas",
+        "Type": "checkbox",
+        "Value": "false"
+      },
+      {
+        "Name": "Tanketyp",
+        "Type": "select",
+        "Value": null
+      }
+    ]
+  }
+}
