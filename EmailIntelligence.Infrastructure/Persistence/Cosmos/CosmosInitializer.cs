@@ -26,18 +26,28 @@ public sealed class CosmosInitializer(
 
         logger.LogInformation("Ensuring Cosmos database '{Database}' and containers exist.", _options.DatabaseId);
 
-        var database = await client.CreateDatabaseIfNotExistsAsync(
-            _options.DatabaseId, throughput: _options.DatabaseThroughput, cancellationToken: cancellationToken);
-
-        foreach (var registration in resolver.Registrations)
+        try
         {
-            await database.Database.CreateContainerIfNotExistsAsync(
-                new ContainerProperties(registration.ContainerName, registration.PartitionKeyPath),
-                cancellationToken: cancellationToken);
+            var database = await client.CreateDatabaseIfNotExistsAsync(
+                _options.DatabaseId, throughput: _options.DatabaseThroughput, cancellationToken: cancellationToken);
 
-            logger.LogInformation(
-                "Container '{Container}' ready (partition key '{PartitionKeyPath}').",
-                registration.ContainerName, registration.PartitionKeyPath);
+            foreach (var registration in resolver.Registrations)
+            {
+                await database.Database.CreateContainerIfNotExistsAsync(
+                    new ContainerProperties(registration.ContainerName, registration.PartitionKeyPath),
+                    cancellationToken: cancellationToken);
+
+                logger.LogInformation(
+                    "Container '{Container}' ready (partition key '{PartitionKeyPath}').",
+                    registration.ContainerName, registration.PartitionKeyPath);
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex,
+                "Failed to ensure Cosmos database '{Database}' and containers exist. " +
+                "Continuing startup; Cosmos-backed operations will fail until this is resolved.",
+                _options.DatabaseId);
         }
     }
 
