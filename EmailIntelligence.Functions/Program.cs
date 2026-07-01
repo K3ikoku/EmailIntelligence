@@ -1,5 +1,7 @@
 using EmailIntelligence.Domain.Configurations;
 using EmailIntelligence.Domain.Entities;
+using EmailIntelligence.Domain.Entities.Configurations;
+using EmailIntelligence.Domain.Entities.Configurations.Notion;
 using EmailIntelligence.Functions.OpenApi;
 using EmailIntelligence.Infrastructure.Clients;
 using EmailIntelligence.Infrastructure.Clients.Interfaces;
@@ -38,6 +40,9 @@ builder.Services.AddTransient<IEmailNotionMapperService, EmailNotionMapperServic
 builder.Services.AddTransient<INewsletterPipelineService, NewsletterPipelineService>();
 builder.Services.AddTransient<INotionService, NotionService>();
 builder.Services.AddTransient<IMailKitClient, MailKitClient>();
+builder.Services.AddTransient<IConfigurationService, ConfigurationService>();
+builder.Services.AddSingleton<IValidateOptions<ImapInputConfigurationRequest>, ImapInputConfigurationRequestValidator>();
+builder.Services.AddSingleton<IValidateOptions<NotionOutputConfigurationRequest>, NotionOutputConfigurationRequestValidator>();
 
 // Notion client
 builder.Services.AddNotionClient(options =>
