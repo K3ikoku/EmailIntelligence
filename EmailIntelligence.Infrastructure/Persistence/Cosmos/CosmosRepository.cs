@@ -7,15 +7,9 @@ using Microsoft.Azure.Cosmos.Linq;
 
 namespace EmailIntelligence.Infrastructure.Persistence.Cosmos;
 
-/// <summary>
-/// Cosmos DB implementation of <see cref="IRepository{T}"/>. Safe to use as a singleton;
-/// it holds only a cached <see cref="Container"/> handle obtained from the resolver.
-/// </summary>
 public sealed class CosmosRepository<T>(ICosmosContainerResolver resolver) : IRepository<T>
     where T : IDocument
 {
-    // The LINQ provider must translate member names with the same camelCase policy as the
-    // System.Text.Json serializer, otherwise predicates reference the wrong JSON paths.
     private static readonly CosmosLinqSerializerOptions LinqOptions =
         new() { PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase };
 
@@ -44,8 +38,6 @@ public sealed class CosmosRepository<T>(ICosmosContainerResolver resolver) : IRe
 
     public Task CreateManyAsync(IEnumerable<T> items, CancellationToken cancellationToken = default)
     {
-        // With CosmosOptions.AllowBulkExecution = true the SDK coalesces these concurrent
-        // operations into efficient bulk batches per partition.
         var tasks = items.Select(item =>
             _container.CreateItemAsync(item, new PartitionKey(item.PartitionKey), cancellationToken: cancellationToken));
         return Task.WhenAll(tasks);
