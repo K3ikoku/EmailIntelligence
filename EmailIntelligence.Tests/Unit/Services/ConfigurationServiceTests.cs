@@ -11,26 +11,24 @@ public class ConfigurationServiceTests
 
     private ConfigurationService Sut => new(
         _secretStore,
-        new ImapInputConfigurationRequestValidator(),
-        new NotionOutputConfigurationRequestValidator());
+        new ImapInputConfigurationValidator(),
+        new NotionOutputConfigurationValidator());
 
-    private static ImapInputConfigurationRequest ImapRequest(
-        string username = "user@example.com", string password = "s3cret", int port = 993) => new()
+    private static ImapInputConfiguration ImapConfig(
+        string host = "imap.example.com", string username = "user@example.com", int port = 993) => new()
     {
-        Host = "imap.example.com",
+        Host = host,
         Port = port,
         Username = username,
-        Password = password,
         UseSsl = true,
         RetrievingFolder = "INBOX",
         ProcessedFolder = "Processed"
     };
 
-    private static NotionOutputConfigurationRequest NotionRequest(
-        string authToken = "ntn_token", IEnumerable<Page>? pages = null, Guid? authTokenId = null) => new()
+    private static NotionOutputConfiguration NotionConfig(
+        IEnumerable<Page>? pages = null, Guid? authTokenId = null) => new()
     {
         AuthTokenId = authTokenId ?? Guid.NewGuid(),
-        AuthToken = authToken,
         Pages = pages ?? []
     };
 
@@ -39,11 +37,11 @@ public class ConfigurationServiceTests
             .SetSecretAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
 
     [Fact]
-    public async Task CreateImap_builds_the_configuration_and_stores_the_password()
+    public async Task CreateImap_returns_the_configuration_and_stores_the_password_under_its_id()
     {
         using var cts = new CancellationTokenSource();
 
-        var result = await Sut.CreateImapInputConfigurationAsync(ImapRequest(), cts.Token);
+        var result = await Sut.CreateImapInputConfigurationAsync(ImapConfig(), "s3cret", cts.Token);
 
         result.Succeeded.ShouldBeTrue();
         result.Errors.ShouldBeEmpty();
@@ -53,16 +51,14 @@ public class ConfigurationServiceTests
         await _secretStore.Received(1).SetSecretAsync(config.ImapPasswordId, "s3cret", cts.Token);
     }
 
-    [Theory]
-    [InlineData("")]
-    [InlineData("   ")]
-    public async Task CreateImap_reports_a_blank_password_and_writes_nothing(string password)
+    [Fact]
+    public async Task CreateImap_reports_a_blank_host_and_writes_nothing()
     {
-        var result = await Sut.CreateImapInputConfigurationAsync(ImapRequest(password: password));
+        var result = await Sut.CreateImapInputConfigurationAsync(ImapConfig(host: ""), "s3cret");
 
         result.Succeeded.ShouldBeFalse();
         result.Value.ShouldBeNull();
-        result.Errors.ShouldContain(e => e.Contains(nameof(ImapInputConfigurationRequest.Password)));
+        result.Errors.ShouldContain(e => e.Contains(nameof(ImapInputConfiguration.Host)));
         await AssertNothingWrittenToKeyVault();
     }
 
@@ -71,22 +67,22 @@ public class ConfigurationServiceTests
     [InlineData(70000)]
     public async Task CreateImap_reports_an_out_of_range_port_and_writes_nothing(int port)
     {
-        var result = await Sut.CreateImapInputConfigurationAsync(ImapRequest(port: port));
+        var result = await Sut.CreateImapInputConfigurationAsync(ImapConfig(port: port), "s3cret");
 
         result.Succeeded.ShouldBeFalse();
-        result.Errors.ShouldContain(e => e.Contains(nameof(ImapInputConfigurationRequest.Port)));
+        result.Errors.ShouldContain(e => e.Contains(nameof(ImapInputConfiguration.Port)));
         await AssertNothingWrittenToKeyVault();
     }
 
     [Fact]
-    public async Task CreateNotion_uses_the_requests_auth_token_id_and_stores_the_token_under_it()
+    public async Task CreateNotion_returns_the_configuration_and_stores_the_token_under_the_auth_token_id()
     {
         var authTokenId = Guid.NewGuid();
         var pages = new List<Page>();
         using var cts = new CancellationTokenSource();
 
         var result = await Sut.CreateNotionOutputConfigurationAsync(
-            NotionRequest(pages: pages, authTokenId: authTokenId), cts.Token);
+            NotionConfig(pages: pages, authTokenId: authTokenId), "ntn_token", cts.Token);
 
         result.Succeeded.ShouldBeTrue();
         var config = result.Value.ShouldNotBeNull();
@@ -98,23 +94,12 @@ public class ConfigurationServiceTests
     [Fact]
     public async Task CreateNotion_reports_an_empty_auth_token_id_and_writes_nothing()
     {
-        var result = await Sut.CreateNotionOutputConfigurationAsync(NotionRequest(authTokenId: Guid.Empty));
-
-        result.Succeeded.ShouldBeFalse();
-        result.Errors.ShouldContain(e => e.Contains(nameof(NotionOutputConfigurationRequest.AuthTokenId)));
-        await AssertNothingWrittenToKeyVault();
-    }
-
-    [Theory]
-    [InlineData("")]
-    [InlineData("   ")]
-    public async Task CreateNotion_reports_a_blank_token_and_writes_nothing(string token)
-    {
-        var result = await Sut.CreateNotionOutputConfigurationAsync(NotionRequest(authToken: token));
+        var result = await Sut.CreateNotionOutputConfigurationAsync(
+            NotionConfig(authTokenId: Guid.Empty), "ntn_token");
 
         result.Succeeded.ShouldBeFalse();
         result.Value.ShouldBeNull();
-        result.Errors.ShouldContain(e => e.Contains(nameof(NotionOutputConfigurationRequest.AuthToken)));
+        result.Errors.ShouldContain(e => e.Contains(nameof(NotionOutputConfiguration.AuthTokenId)));
         await AssertNothingWrittenToKeyVault();
     }
 }

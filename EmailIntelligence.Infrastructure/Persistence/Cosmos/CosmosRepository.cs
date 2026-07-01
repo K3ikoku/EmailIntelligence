@@ -7,7 +7,7 @@ using Microsoft.Azure.Cosmos.Linq;
 
 namespace EmailIntelligence.Infrastructure.Persistence.Cosmos;
 
-public sealed class CosmosRepository<T>(ICosmosContainerResolver resolver) : IRepository<T>
+public class CosmosRepository<T>(ICosmosContainerResolver resolver) : IRepository<T>
     where T : IDocument
 {
     private static readonly CosmosLinqSerializerOptions LinqOptions =

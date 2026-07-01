@@ -1,4 +1,3 @@
-using EmailIntelligence.Domain.Entities;
 using EmailIntelligence.Domain.Entities.Drafts.Notion;
 using EmailIntelligence.Infrastructure.Clients.Interfaces;
 

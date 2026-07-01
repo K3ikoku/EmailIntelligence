@@ -40,18 +40,12 @@ public sealed class ConfigurationHttpFunctions(
         if (contract is null)
             return new BadRequestObjectResult(new[] { "A JSON request body is required." });
 
+        var secretErrors = contract.ValidateSecret();
+        if (secretErrors.Count > 0)
+            return new BadRequestObjectResult(secretErrors);
+
         var result = await configurationService.CreateImapInputConfigurationAsync(
-            new ImapInputConfigurationRequest
-            {
-                Host = contract.Host ?? string.Empty,
-                Port = contract.Port,
-                Username = contract.Username ?? string.Empty,
-                Password = contract.Password ?? string.Empty,
-                UseSsl = contract.UseSsl,
-                RetrievingFolder = contract.RetrievingFolder ?? string.Empty,
-                ProcessedFolder = contract.ProcessedFolder ?? string.Empty
-            },
-            request.HttpContext.RequestAborted);
+            contract.ToConfiguration(), contract.Password ?? string.Empty, request.HttpContext.RequestAborted);
 
         return ToActionResult(result);
     }
@@ -77,14 +71,12 @@ public sealed class ConfigurationHttpFunctions(
         if (contract is null)
             return new BadRequestObjectResult(new[] { "A JSON request body is required." });
 
+        var secretErrors = contract.ValidateSecret();
+        if (secretErrors.Count > 0)
+            return new BadRequestObjectResult(secretErrors);
+
         var result = await configurationService.CreateNotionOutputConfigurationAsync(
-            new NotionOutputConfigurationRequest
-            {
-                AuthTokenId = contract.AuthTokenId,
-                AuthToken = contract.AuthToken ?? string.Empty,
-                Pages = contract.Pages ?? []
-            },
-            request.HttpContext.RequestAborted);
+            contract.ToConfiguration(), contract.AuthToken ?? string.Empty, request.HttpContext.RequestAborted);
 
         return ToActionResult(result);
     }

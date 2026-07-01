@@ -1,4 +1,3 @@
-using EmailIntelligence.Domain.Entities;
 using EmailIntelligence.Domain.Persistence;
 using EmailIntelligence.Infrastructure.Persistence.Cosmos;
 using Microsoft.Azure.Cosmos;
@@ -18,32 +17,32 @@ public class CosmosContainerResolverTests : IDisposable
             Options.Create(new CosmosOptions { DatabaseId = "db", AccountEndpoint = "https://localhost:8081/" }),
             registrations);
 
-    private static CosmosContainerRegistration ProcessedEmails() =>
-        new(typeof(ProcessedEmail), "processed-emails", "/sender");
+    private static CosmosContainerRegistration TestDocs() =>
+        new(typeof(TestDoc), "test-docs", "/id");
 
     [Fact]
     public void Resolve_returns_container_for_registered_type()
     {
-        var sut = CreateSut(ProcessedEmails());
+        var sut = CreateSut(TestDocs());
 
-        var container = sut.Resolve<ProcessedEmail>();
+        var container = sut.Resolve<TestDoc>();
 
         container.ShouldNotBeNull();
-        container.Id.ShouldBe("processed-emails");
+        container.Id.ShouldBe("test-docs");
     }
 
     [Fact]
     public void Resolve_caches_the_container_handle()
     {
-        var sut = CreateSut(ProcessedEmails());
+        var sut = CreateSut(TestDocs());
 
-        sut.Resolve<ProcessedEmail>().ShouldBeSameAs(sut.Resolve<ProcessedEmail>());
+        sut.Resolve<TestDoc>().ShouldBeSameAs(sut.Resolve<TestDoc>());
     }
 
     [Fact]
     public void Resolve_unregistered_type_throws_with_actionable_message()
     {
-        var sut = CreateSut(ProcessedEmails());
+        var sut = CreateSut(TestDocs());
 
         var ex = Should.Throw<InvalidOperationException>(() => sut.Resolve<UnregisteredDoc>());
         ex.Message.ShouldContain(nameof(UnregisteredDoc));
@@ -52,16 +51,21 @@ public class CosmosContainerResolverTests : IDisposable
     [Fact]
     public void Registrations_exposes_all_registered_types()
     {
-        var sut = CreateSut(ProcessedEmails());
+        var sut = CreateSut(TestDocs());
 
         var registration = sut.Registrations.ShouldHaveSingleItem();
-        registration.DocumentType.ShouldBe(typeof(ProcessedEmail));
-        registration.ContainerName.ShouldBe("processed-emails");
+        registration.DocumentType.ShouldBe(typeof(TestDoc));
+        registration.ContainerName.ShouldBe("test-docs");
     }
 
     public void Dispose() => _client.Dispose();
 
-    private sealed class UnregisteredDoc : Document
+    private sealed record TestDoc : Document
+    {
+        public override string PartitionKey => Id;
+    }
+
+    private sealed record UnregisteredDoc : Document
     {
         public override string PartitionKey => "x";
     }

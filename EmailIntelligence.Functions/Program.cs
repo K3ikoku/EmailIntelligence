@@ -1,7 +1,7 @@
 using EmailIntelligence.Domain.Configurations;
-using EmailIntelligence.Domain.Entities;
 using EmailIntelligence.Domain.Entities.Configurations;
 using EmailIntelligence.Domain.Entities.Configurations.Notion;
+using EmailIntelligence.Domain.Entities.CosmosDocuments;
 using EmailIntelligence.Functions.OpenApi;
 using EmailIntelligence.Infrastructure.Clients;
 using EmailIntelligence.Infrastructure.Clients.Interfaces;
@@ -41,8 +41,8 @@ builder.Services.AddTransient<INewsletterPipelineService, NewsletterPipelineServ
 builder.Services.AddTransient<INotionService, NotionService>();
 builder.Services.AddTransient<IMailKitClient, MailKitClient>();
 builder.Services.AddTransient<IConfigurationService, ConfigurationService>();
-builder.Services.AddSingleton<IValidateOptions<ImapInputConfigurationRequest>, ImapInputConfigurationRequestValidator>();
-builder.Services.AddSingleton<IValidateOptions<NotionOutputConfigurationRequest>, NotionOutputConfigurationRequestValidator>();
+builder.Services.AddSingleton<IValidateOptions<ImapInputConfiguration>, ImapInputConfigurationValidator>();
+builder.Services.AddSingleton<IValidateOptions<NotionOutputConfiguration>, NotionOutputConfigurationValidator>();
 
 // Notion client
 builder.Services.AddNotionClient(options =>
@@ -55,7 +55,9 @@ if (!string.IsNullOrWhiteSpace(builder.Configuration["Cosmos:AccountEndpoint"]) 
 {
     builder.Services
         .AddCosmosPersistence(builder.Configuration)
-        .AddCosmosContainer<ProcessedEmail>("processed-emails", "/sender");
+        .AddCosmosContainer<BaseInputConfiguration>("inputs", "/id")
+        .AddCosmosContainer<BaseOutputConfiguration>("outputs", "/id")
+        .AddCosmosContainer<FeedProfile>("feed-profiles", "/id");
 }
 
 // OpenAPI 

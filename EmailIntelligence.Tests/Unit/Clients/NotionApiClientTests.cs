@@ -1,5 +1,4 @@
 using EmailIntelligence.Domain.Configurations;
-using EmailIntelligence.Domain.Entities;
 using EmailIntelligence.Domain.Enums;
 using EmailIntelligence.Infrastructure.Clients;
 using Microsoft.Extensions.Options;

@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using EmailIntelligence.Domain.Entities.Configurations;
+using EmailIntelligence.Domain.Enums;
 
 namespace EmailIntelligence.Tests.Unit.Configurations;
 
@@ -39,5 +40,18 @@ public class ImapInputConfigurationTests
     public void ImapPasswordId_is_derived_from_the_username()
     {
         Config("alice@example.com").ImapPasswordId.ShouldBe("imap-alice-example-com-password");
+    }
+
+    [Fact]
+    public void InputHost_is_imap()
+    {
+        Config("user@example.com").InputHost.ShouldBe(InputHost.Imap);
+    }
+
+    [Fact]
+    public void PartitionKey_is_the_document_id()
+    {
+        var config = Config("user@example.com") with { Id = "doc-1" };
+        config.PartitionKey.ShouldBe("doc-1");
     }
 }

@@ -8,52 +8,38 @@ namespace EmailIntelligence.Infrastructure.Services;
 
 public sealed class ConfigurationService(
     ISecretStore secretStore,
-    IValidateOptions<ImapInputConfigurationRequest> imapValidator,
-    IValidateOptions<NotionOutputConfigurationRequest> notionValidator) : IConfigurationService
+    IValidateOptions<ImapInputConfiguration> imapValidator,
+    IValidateOptions<NotionOutputConfiguration> notionValidator) : IConfigurationService
 {
     public async Task<ConfigurationResult<ImapInputConfiguration>> CreateImapInputConfigurationAsync(
-        ImapInputConfigurationRequest request, 
+        ImapInputConfiguration configuration,
+        string password,
         CancellationToken cancellationToken = default)
     {
-        if (request is null)
-            return ConfigurationResult<ImapInputConfiguration>.Failure(["Request is required."]);
+        if (configuration is null)
+            return ConfigurationResult<ImapInputConfiguration>.Failure(["Configuration is required."]);
 
-        var validation = imapValidator.Validate(null, request);
+        var validation = imapValidator.Validate(null, configuration);
         if (validation.Failed)
             return ConfigurationResult<ImapInputConfiguration>.Failure(validation.Failures ?? []);
 
-        var configuration = new ImapInputConfiguration
-        {
-            Host = request.Host,
-            Port = request.Port,
-            Username = request.Username,
-            UseSsl = request.UseSsl,
-            RetrievingFolder = request.RetrievingFolder,
-            ProcessedFolder = request.ProcessedFolder
-        };
-
-        await secretStore.SetSecretAsync(configuration.ImapPasswordId, request.Password, cancellationToken);
+        await secretStore.SetSecretAsync(configuration.ImapPasswordId, password, cancellationToken);
         return ConfigurationResult<ImapInputConfiguration>.Success(configuration);
     }
 
     public async Task<ConfigurationResult<NotionOutputConfiguration>> CreateNotionOutputConfigurationAsync(
-        NotionOutputConfigurationRequest request, 
+        NotionOutputConfiguration configuration,
+        string authToken,
         CancellationToken cancellationToken = default)
     {
-        if (request is null)
-            return ConfigurationResult<NotionOutputConfiguration>.Failure(["Request is required."]);
+        if (configuration is null)
+            return ConfigurationResult<NotionOutputConfiguration>.Failure(["Configuration is required."]);
 
-        var validation = notionValidator.Validate(null, request);
+        var validation = notionValidator.Validate(null, configuration);
         if (validation.Failed)
             return ConfigurationResult<NotionOutputConfiguration>.Failure(validation.Failures ?? []);
 
-        var configuration = new NotionOutputConfiguration
-        {
-            AuthTokenId = request.AuthTokenId,
-            Pages = request.Pages
-        };
-
-        await secretStore.SetSecretAsync(configuration.AuthTokenId.ToString(), request.AuthToken, cancellationToken);
+        await secretStore.SetSecretAsync(configuration.AuthTokenId.ToString(), authToken, cancellationToken);
         return ConfigurationResult<NotionOutputConfiguration>.Success(configuration);
     }
 }

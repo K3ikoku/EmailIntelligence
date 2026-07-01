@@ -2,28 +2,27 @@ using EmailIntelligence.Domain.Entities.Configurations;
 
 namespace EmailIntelligence.Tests.Unit.Configurations;
 
-public class ImapInputConfigurationRequestValidatorTests
+public class ImapInputConfigurationValidatorTests
 {
-    private static ImapInputConfigurationRequest Valid() => new()
+    private static ImapInputConfiguration Valid() => new()
     {
         Host = "imap.example.com",
         Port = 993,
         Username = "user@example.com",
-        Password = "s3cret",
         UseSsl = true,
         RetrievingFolder = "INBOX",
         ProcessedFolder = "Processed"
     };
 
-    private static bool Validate(ImapInputConfigurationRequest request, out string failures)
+    private static bool Validate(ImapInputConfiguration configuration, out string failures)
     {
-        var result = new ImapInputConfigurationRequestValidator().Validate(null, request);
+        var result = new ImapInputConfigurationValidator().Validate(null, configuration);
         failures = result.FailureMessage ?? string.Empty;
         return result.Succeeded;
     }
 
     [Fact]
-    public void Valid_request_passes()
+    public void Valid_configuration_passes()
     {
         Validate(Valid(), out _).ShouldBeTrue();
     }
@@ -34,7 +33,7 @@ public class ImapInputConfigurationRequestValidatorTests
     public void Missing_host_fails(string host)
     {
         Validate(Valid() with { Host = host }, out var failures).ShouldBeFalse();
-        failures.ShouldContain(nameof(ImapInputConfigurationRequest.Host));
+        failures.ShouldContain(nameof(ImapInputConfiguration.Host));
     }
 
     [Theory]
@@ -43,16 +42,7 @@ public class ImapInputConfigurationRequestValidatorTests
     public void Missing_username_fails(string username)
     {
         Validate(Valid() with { Username = username }, out var failures).ShouldBeFalse();
-        failures.ShouldContain(nameof(ImapInputConfigurationRequest.Username));
-    }
-
-    [Theory]
-    [InlineData("")]
-    [InlineData("   ")]
-    public void Missing_password_fails(string password)
-    {
-        Validate(Valid() with { Password = password }, out var failures).ShouldBeFalse();
-        failures.ShouldContain(nameof(ImapInputConfigurationRequest.Password));
+        failures.ShouldContain(nameof(ImapInputConfiguration.Username));
     }
 
     [Theory]
@@ -62,7 +52,7 @@ public class ImapInputConfigurationRequestValidatorTests
     public void Out_of_range_port_fails(int port)
     {
         Validate(Valid() with { Port = port }, out var failures).ShouldBeFalse();
-        failures.ShouldContain(nameof(ImapInputConfigurationRequest.Port));
+        failures.ShouldContain(nameof(ImapInputConfiguration.Port));
     }
 
     [Theory]
@@ -78,7 +68,21 @@ public class ImapInputConfigurationRequestValidatorTests
     public void Missing_folders_fail()
     {
         Validate(Valid() with { RetrievingFolder = "", ProcessedFolder = "" }, out var failures).ShouldBeFalse();
-        failures.ShouldContain(nameof(ImapInputConfigurationRequest.RetrievingFolder));
-        failures.ShouldContain(nameof(ImapInputConfigurationRequest.ProcessedFolder));
+        failures.ShouldContain(nameof(ImapInputConfiguration.RetrievingFolder));
+        failures.ShouldContain(nameof(ImapInputConfiguration.ProcessedFolder));
+    }
+
+    [Fact]
+    public void All_failures_are_reported_together()
+    {
+        Validate(
+            Valid() with { Host = "", Username = "", RetrievingFolder = "", ProcessedFolder = "", Port = 0 },
+            out var failures).ShouldBeFalse();
+
+        failures.ShouldContain(nameof(ImapInputConfiguration.Host));
+        failures.ShouldContain(nameof(ImapInputConfiguration.Username));
+        failures.ShouldContain(nameof(ImapInputConfiguration.RetrievingFolder));
+        failures.ShouldContain(nameof(ImapInputConfiguration.ProcessedFolder));
+        failures.ShouldContain(nameof(ImapInputConfiguration.Port));
     }
 }
