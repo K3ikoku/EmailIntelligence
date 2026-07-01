@@ -38,7 +38,8 @@ public class NewsletterPipelineService(
             if (processedIds.Count > 0)
             {
                 await emailService.MoveProcessedEmailsAsync(processedIds);
-                logger.LogInformation("Moved {MovedCount} processed email(s) to the processed folder.", processedIds.Count);
+                logger.LogInformation("Moved {MovedCount} processed email(s) to the processed folder.",
+                    processedIds.Count);
             }
 
             stopwatch.Stop();

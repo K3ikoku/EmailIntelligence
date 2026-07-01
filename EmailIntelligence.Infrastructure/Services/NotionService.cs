@@ -1,4 +1,5 @@
 using EmailIntelligence.Domain.Entities;
+using EmailIntelligence.Domain.Entities.Drafts.Notion;
 using EmailIntelligence.Infrastructure.Clients.Interfaces;
 using EmailIntelligence.Infrastructure.Services.Interfaces;
 
@@ -6,7 +7,7 @@ namespace EmailIntelligence.Infrastructure.Services;
 
 public class NotionService(INotionApiClient notionApiClient) : INotionService
 {
-    public async Task<IEnumerable<string>> CreatePage(IEnumerable<NotionPageDraft> drafts)
+    public async Task<IEnumerable<string>> CreatePage(IEnumerable<Page> drafts)
     {
         var createdIds = new List<string>();
         foreach (var draft in drafts)

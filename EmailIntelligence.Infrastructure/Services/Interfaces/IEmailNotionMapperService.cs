@@ -1,8 +1,9 @@
 using EmailIntelligence.Domain.Entities;
+using EmailIntelligence.Domain.Entities.Drafts.Notion;
 
 namespace EmailIntelligence.Infrastructure.Services.Interfaces;
 
 public interface IEmailNotionMapperService
 {
-    NotionPageDraft MapEmail(Email email);
+    Page MapEmail(Email email);
 }

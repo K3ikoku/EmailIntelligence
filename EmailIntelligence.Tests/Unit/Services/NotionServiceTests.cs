@@ -1,4 +1,5 @@
 using EmailIntelligence.Domain.Entities;
+using EmailIntelligence.Domain.Entities.Drafts.Notion;
 using EmailIntelligence.Infrastructure.Clients.Interfaces;
 using EmailIntelligence.Infrastructure.Services;
 
@@ -6,15 +7,15 @@ namespace EmailIntelligence.Tests.Unit.Services;
 
 public class NotionServiceTests
 {
-    private static NotionPageDraft Draft(string emailId, string title) =>
+    private static Page Draft(string emailId, string title) =>
         new() { EmailId = emailId, Title = title, Blocks = [], Properties = [] };
 
     private static INotionApiClient ApiWith(out INotionApiClient api)
     {
         api = Substitute.For<INotionApiClient>();
         api.PageExists(Arg.Any<string>()).Returns(false);
-        api.CreatePage(Arg.Any<NotionPageDraft>())
-            .Returns(call => ((NotionPageDraft)call[0]).EmailId);
+        api.CreatePage(Arg.Any<Page>())
+            .Returns(call => ((Page)call[0]).EmailId);
         return api;
     }
 
@@ -27,7 +28,7 @@ public class NotionServiceTests
         var ids = await new NotionService(api).CreatePage([Draft("e1", "Existing title")]);
 
         ids.ShouldBe(["e1"]);
-        await api.DidNotReceive().CreatePage(Arg.Any<NotionPageDraft>());
+        await api.DidNotReceive().CreatePage(Arg.Any<Page>());
     }
 
     [Fact]
@@ -46,7 +47,7 @@ public class NotionServiceTests
     public async Task CreatePage_omits_ids_when_creation_fails()
     {
         ApiWith(out var api);
-        api.CreatePage(Arg.Any<NotionPageDraft>()).Returns((string?)null);
+        api.CreatePage(Arg.Any<Page>()).Returns((string?)null);
 
         var ids = await new NotionService(api).CreatePage([Draft("e3", "New title")]);
 
@@ -61,7 +62,7 @@ public class NotionServiceTests
         (await new NotionService(api).CreatePage([])).ShouldBeEmpty();
 
         await api.DidNotReceive().PageExists(Arg.Any<string>());
-        await api.DidNotReceive().CreatePage(Arg.Any<NotionPageDraft>());
+        await api.DidNotReceive().CreatePage(Arg.Any<Page>());
     }
 
     [Fact]
@@ -69,7 +70,7 @@ public class NotionServiceTests
     {
         ApiWith(out var api);
         api.PageExists("T-existing").Returns(true);
-        api.CreatePage(Arg.Is<NotionPageDraft>(d => d.Title == "T-fail")).Returns((string?)null);
+        api.CreatePage(Arg.Is<Page>(d => d.Title == "T-fail")).Returns((string?)null);
 
         var ids = await new NotionService(api).CreatePage(
         [

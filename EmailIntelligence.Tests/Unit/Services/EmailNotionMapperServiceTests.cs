@@ -2,6 +2,7 @@ using EmailIntelligence.Domain.Entities;
 using EmailIntelligence.Infrastructure.Services;
 using EmailIntelligence.Tests.TestSupport;
 using Notion.Client;
+using Page = EmailIntelligence.Domain.Entities.Drafts.Notion.Page;
 
 namespace EmailIntelligence.Tests.Unit.Services;
 
@@ -23,7 +24,7 @@ public class EmailNotionMapperServiceTests
             MessageId = messageId
         };
 
-    private static string SelectValue(NotionPageDraft draft, string propertyName) =>
+    private static string SelectValue(Page draft, string propertyName) =>
         ((SelectPropertyValue)draft.Properties.Single(p => p.Name == propertyName).Value).Select.Name;
 
     [Fact]

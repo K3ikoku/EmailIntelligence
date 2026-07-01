@@ -4,6 +4,8 @@ using EmailIntelligence.Domain.Enums;
 using EmailIntelligence.Infrastructure.Clients;
 using Microsoft.Extensions.Options;
 using Notion.Client;
+using Page = EmailIntelligence.Domain.Entities.Drafts.Notion.Page;
+using Property = EmailIntelligence.Domain.Entities.Drafts.Notion.Property;
 
 namespace EmailIntelligence.Tests.Unit.Clients;
 
@@ -29,14 +31,14 @@ public class NotionApiClientTests
 
     private NotionApiClient CreateSut() => new(_client, Options());
 
-    private static NotionPageDraft DraftWithTitleProperty() => new()
+    private static Page DraftWithTitleProperty() => new()
     {
         EmailId = "e1",
         Title = "T",
         Blocks = [],
         Properties =
         [
-            new NotionPageProperty
+            new Property
             {
                 Name = "Name",
                 Value = new TitlePropertyValue { Title = [new RichTextText { Text = new Text { Content = "T" } }] }
@@ -48,7 +50,7 @@ public class NotionApiClientTests
     public async Task PageExists_is_true_when_query_returns_results()
     {
         _databases.QueryAsync(Arg.Any<string>(), Arg.Any<DatabasesQueryParameters>())
-            .Returns(new DatabaseQueryResponse { Results = [new Page()] });
+            .Returns(new DatabaseQueryResponse { Results = [new Notion.Client.Page()] });
 
         (await CreateSut().PageExists("title")).ShouldBeTrue();
     }
@@ -66,7 +68,7 @@ public class NotionApiClientTests
     public async Task CreatePage_returns_email_id_when_notion_returns_a_url()
     {
         _pages.CreateAsync(Arg.Any<PagesCreateParameters>())
-            .Returns(new Page { Url = "https://notion.so/p" });
+            .Returns(new Notion.Client.Page { Url = "https://notion.so/p" });
 
         (await CreateSut().CreatePage(DraftWithTitleProperty())).ShouldBe("e1");
     }
@@ -75,7 +77,7 @@ public class NotionApiClientTests
     public async Task CreatePage_returns_null_when_notion_returns_no_url()
     {
         _pages.CreateAsync(Arg.Any<PagesCreateParameters>())
-            .Returns(new Page { Url = null });
+            .Returns(new Notion.Client.Page { Url = null });
 
         (await CreateSut().CreatePage(DraftWithTitleProperty())).ShouldBeNull();
     }

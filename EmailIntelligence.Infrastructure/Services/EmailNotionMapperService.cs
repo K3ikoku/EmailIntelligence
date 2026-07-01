@@ -5,15 +5,17 @@ using EmailIntelligence.Domain.Enums;
 using EmailIntelligence.Infrastructure.Services.Interfaces;
 using EmailIntelligence.Infrastructure.Utilities;
 using Notion.Client;
+using Page = EmailIntelligence.Domain.Entities.Drafts.Notion.Page;
+using Property = EmailIntelligence.Domain.Entities.Drafts.Notion.Property;
 
 namespace EmailIntelligence.Infrastructure.Services;
 
 public class EmailNotionMapperService(IOptions<NotionOptions> options) : IEmailNotionMapperService
 {
-    public NotionPageDraft MapEmail(Email email)
+    public Page MapEmail(Email email)
     {
         var title = $"{DateTimeOffset.UtcNow:yyyy-MM-dd} - {email.EmailSender} - {email.Subject}";
-        var response = new NotionPageDraft
+        var response = new Page
         {
             Title = title,
             EmailId = email.MessageId,
@@ -31,9 +33,9 @@ public class EmailNotionMapperService(IOptions<NotionOptions> options) : IEmailN
         return blocks;
     }
 
-    private List<NotionPageProperty> MapProperties(Email email, string title)
+    private List<Property> MapProperties(Email email, string title)
     {
-        var result = new List<NotionPageProperty>
+        var result = new List<Property>
         {
             // Create title property
             new()
@@ -46,7 +48,7 @@ public class EmailNotionMapperService(IOptions<NotionOptions> options) : IEmailN
         {
             if (property.Value is not null)
             {
-                result.Add(new NotionPageProperty
+                result.Add(new Property
                 {
                     Name = property.Name,
                     Value = ToPropertyValue(property.Type, property.Value)
@@ -57,14 +59,14 @@ public class EmailNotionMapperService(IOptions<NotionOptions> options) : IEmailN
             switch (property.Type)
             {
                 case NotionPropertyType.Date:
-                    result.Add(new NotionPageProperty
+                    result.Add(new Property
                     {
                         Name = property.Name,
                         Value = ToPropertyValue(NotionPropertyType.Date, email.DateReceived)
                     });
                     continue;
                 case NotionPropertyType.Select:
-                    result.Add(new NotionPageProperty
+                    result.Add(new Property
                     {
                         Name = property.Name,
                         Value = new SelectPropertyValue

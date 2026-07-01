@@ -4,6 +4,8 @@ using EmailIntelligence.Domain.Entities;
 using EmailIntelligence.Domain.Enums;
 using EmailIntelligence.Infrastructure.Clients.Interfaces;
 using Notion.Client;
+using Page = EmailIntelligence.Domain.Entities.Drafts.Notion.Page;
+using Property = EmailIntelligence.Domain.Entities.Drafts.Notion.Property;
 
 namespace EmailIntelligence.Infrastructure.Clients;
 
@@ -26,7 +28,7 @@ public sealed class NotionApiClient(INotionClient client, IOptions<NotionOptions
         (options.Value.Properties.FirstOrDefault(p => p.Type == NotionPropertyType.Title)
          ?? options.Value.Properties.First()).Name;
     
-    public async Task<string?> CreatePage(NotionPageDraft draft)
+    public async Task<string?> CreatePage(Page draft)
     {
         var parameters = PagesCreateParametersBuilder
             .Create(new DatabaseParentInput() { DatabaseId = options.Value.DatabaseId })
@@ -39,7 +41,7 @@ public sealed class NotionApiClient(INotionClient client, IOptions<NotionOptions
         return page.Url != null ? draft.EmailId : null;
     }
 
-    private Dictionary<string, PropertyValue> BuildProperties(IEnumerable<NotionPageProperty> propertiesList)
+    private Dictionary<string, PropertyValue> BuildProperties(IEnumerable<Property> propertiesList)
     {
         var properties = propertiesList.ToList();
         var propertyDictionary = new Dictionary<string, PropertyValue>(properties.Count + 1);

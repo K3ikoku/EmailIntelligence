@@ -1,4 +1,5 @@
 using EmailIntelligence.Domain.Entities;
+using EmailIntelligence.Domain.Entities.Drafts.Notion;
 using EmailIntelligence.Infrastructure.Services;
 using EmailIntelligence.Infrastructure.Services.Interfaces;
 using EmailIntelligence.Tests.TestSupport;
@@ -38,7 +39,7 @@ public class NewsletterPipelineServiceTests
         MessageId = messageId
     };
 
-    private static NotionPageDraft Draft(string emailId) =>
+    private static Page Draft(string emailId) =>
         new() { EmailId = emailId, Title = $"T-{emailId}", Blocks = [], Properties = [] };
 
     [Fact]
@@ -49,13 +50,13 @@ public class NewsletterPipelineServiceTests
         _emailService.GetAndCleanEmails().Returns([e1, e2]);
         _mapper.MapEmail(e1).Returns(Draft("e1"));
         _mapper.MapEmail(e2).Returns(Draft("e2"));
-        _notionService.CreatePage(Arg.Any<IEnumerable<NotionPageDraft>>()).Returns(["e1", "e2"]);
+        _notionService.CreatePage(Arg.Any<IEnumerable<Page>>()).Returns(["e1", "e2"]);
 
         var result = await CreateSut().ProcessEmails();
 
         result.ShouldBeTrue();
         await _notionService.Received(1).CreatePage(
-            Arg.Is<IEnumerable<NotionPageDraft>>(d => d.Count() == 2));
+            Arg.Is<IEnumerable<Page>>(d => d.Count() == 2));
         await _emailService.Received(1).MoveProcessedEmailsAsync(
             Arg.Is<IEnumerable<string>>(ids => ids.SequenceEqual(new[] { "e1", "e2" })));
     }
@@ -65,7 +66,7 @@ public class NewsletterPipelineServiceTests
     {
         _emailService.GetAndCleanEmails().Returns([Email("e1")]);
         _mapper.MapEmail(Arg.Any<Email>()).Returns(Draft("e1"));
-        _notionService.CreatePage(Arg.Any<IEnumerable<NotionPageDraft>>()).Returns([]);
+        _notionService.CreatePage(Arg.Any<IEnumerable<Page>>()).Returns([]);
 
         var result = await CreateSut().ProcessEmails();
 
@@ -77,7 +78,7 @@ public class NewsletterPipelineServiceTests
     public async Task ProcessEmails_tracks_a_success_event()
     {
         _emailService.GetAndCleanEmails().Returns([]);
-        _notionService.CreatePage(Arg.Any<IEnumerable<NotionPageDraft>>()).Returns([]);
+        _notionService.CreatePage(Arg.Any<IEnumerable<Page>>()).Returns([]);
 
         await CreateSut().ProcessEmails();
 
@@ -103,7 +104,7 @@ public class NewsletterPipelineServiceTests
     public async Task ProcessEmails_does_not_create_pages_when_there_are_no_emails()
     {
         _emailService.GetAndCleanEmails().Returns([]);
-        _notionService.CreatePage(Arg.Any<IEnumerable<NotionPageDraft>>()).Returns([]);
+        _notionService.CreatePage(Arg.Any<IEnumerable<Page>>()).Returns([]);
 
         await CreateSut().ProcessEmails();
 
