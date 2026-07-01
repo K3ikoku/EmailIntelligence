@@ -6,7 +6,6 @@ namespace EmailIntelligence.Domain.Configurations;
 public sealed record NotionOptions
 {
     public const string SectionName = "Notion";
-
     public required string AuthToken { get; init; }
     public required string DatabaseId { get; init; }
     public IEnumerable<NotionPropertyOptions> Properties { get; init; } = new List<NotionPropertyOptions>();
