@@ -10,14 +10,15 @@ using Microsoft.Azure.Functions.Worker.Builder;
 using Microsoft.Azure.Functions.Worker.Extensions.OpenApi;
 using Microsoft.Azure.Functions.Worker.Extensions.OpenApi.Functions;
 using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Abstractions;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 
 var builder = FunctionsApplication.CreateBuilder(args);
 
+builder.Configuration.AddKeyVaultConfiguration();
 builder.ConfigureFunctionsWebApplication();
-
 builder.Services
     .AddApplicationInsightsTelemetryWorkerService()
     .ConfigureFunctionsApplicationInsights();
@@ -29,6 +30,7 @@ builder.Services.AddOptions<NotionOptions>()
     .Bind(builder.Configuration.GetSection(NotionOptions.SectionName));
 builder.Services.AddSingleton<IValidateOptions<NotionOptions>, NotionOptionsValidator>();
 builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<ImapSettings>>().Value);
+builder.Services.AddKeyVaultSecrets(builder.Configuration);
 
 // Pipeline services
 builder.Services.AddTransient<IEmailService, EmailService>();

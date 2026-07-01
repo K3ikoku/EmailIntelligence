@@ -8,7 +8,9 @@
 
     <ItemGroup>
       <PackageReference Include="AngleSharp" Version="1.5.0" />
+      <PackageReference Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.5.1" />
       <PackageReference Include="Azure.Identity" Version="1.21.0" />
+      <PackageReference Include="Azure.Security.KeyVault.Secrets" Version="4.11.0" />
       <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
       <PackageReference Include="MailKit" Version="4.14.1" />
       <!-- Pinned: AI 3.x is incompatible with the Functions isolated worker AI stack
@@ -17,6 +19,7 @@
            "Update all NuGet packages") until the Functions worker AI extension supports AI 3.x. -->
       <PackageReference Include="Microsoft.ApplicationInsights" Version="2.23.0" />
       <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.61.0" />
+      <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.9" />
       <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.9" />
       <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.9" />
       <PackageReference Include="Notion.Net" Version="4.4.0" />
