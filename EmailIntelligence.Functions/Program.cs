@@ -55,8 +55,7 @@ if (!string.IsNullOrWhiteSpace(builder.Configuration["Cosmos:AccountEndpoint"]) 
 {
     builder.Services
         .AddCosmosPersistence(builder.Configuration)
-        .AddCosmosContainer<BaseInputConfiguration>("inputs", "/id")
-        .AddCosmosContainer<BaseOutputConfiguration>("outputs", "/id")
+        .AddCosmosContainer<ConnectorConfiguration>("connectors", "/id")
         .AddCosmosContainer<FeedProfile>("feed-profiles", "/id");
 }
 

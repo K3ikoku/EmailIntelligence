@@ -4,9 +4,10 @@ using Microsoft.Extensions.Options;
 
 namespace EmailIntelligence.Domain.Entities.Configurations.Notion;
 
-public sealed record NotionOutputConfiguration : BaseOutputConfiguration
+public sealed record NotionOutputConfiguration : ConnectorConfiguration
 {
-    public override OutputHost OutputHost => OutputHost.Notion;
+    public override Connector Connector => Connector.Notion;
+    public override ConnectorDirection Direction => ConnectorDirection.Output;
     public required Guid AuthTokenId { get; init; }
     public required IEnumerable<Page> Pages { get; init; }
 }

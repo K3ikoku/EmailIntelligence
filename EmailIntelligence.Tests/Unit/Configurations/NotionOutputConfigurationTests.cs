@@ -12,9 +12,11 @@ public class NotionOutputConfigurationTests
     };
 
     [Fact]
-    public void OutputHost_is_notion()
+    public void Connector_is_notion_output()
     {
-        Config().OutputHost.ShouldBe(OutputHost.Notion);
+        var config = Config();
+        config.Connector.ShouldBe(Connector.Notion);
+        config.Direction.ShouldBe(ConnectorDirection.Output);
     }
 
     [Fact]

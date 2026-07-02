@@ -1,6 +1,6 @@
+using System.Text.Json.Serialization;
 using EmailIntelligence.Domain.Enums;
 using EmailIntelligence.Domain.Persistence;
-using Newtonsoft.Json;
 
 namespace EmailIntelligence.Domain.Entities.CosmosDocuments;
 

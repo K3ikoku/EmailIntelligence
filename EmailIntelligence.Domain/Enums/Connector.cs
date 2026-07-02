@@ -1,6 +1,7 @@
 namespace EmailIntelligence.Domain.Enums;
 
-public enum InputHost
+public enum Connector
 {
-    Imap
+    Imap,
+    Notion
 }

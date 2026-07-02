@@ -43,9 +43,11 @@ public class ImapInputConfigurationTests
     }
 
     [Fact]
-    public void InputHost_is_imap()
+    public void Connector_is_imap_input()
     {
-        Config("user@example.com").InputHost.ShouldBe(InputHost.Imap);
+        var config = Config("user@example.com");
+        config.Connector.ShouldBe(Connector.Imap);
+        config.Direction.ShouldBe(ConnectorDirection.Input);
     }
 
     [Fact]

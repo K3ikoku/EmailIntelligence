@@ -4,9 +4,10 @@ using Microsoft.Extensions.Options;
 
 namespace EmailIntelligence.Domain.Entities.Configurations;
 
-public sealed record ImapInputConfiguration : BaseInputConfiguration
+public sealed record ImapInputConfiguration : ConnectorConfiguration
 {
-    public override InputHost InputHost => InputHost.Imap;
+    public override Connector Connector => Connector.Imap;
+    public override ConnectorDirection Direction => ConnectorDirection.Input;
     public required string Host { get; init; }
     public required int Port { get; init; }
     public required string Username { get; init; }

@@ -1,12 +1,14 @@
+using System.Text.Json.Serialization;
 using EmailIntelligence.Domain.Enums;
 using EmailIntelligence.Domain.Persistence;
-using Newtonsoft.Json;
 
 namespace EmailIntelligence.Domain.Entities.CosmosDocuments;
 
-public abstract record BaseInputConfiguration : Document
+public abstract record ConnectorConfiguration : Document
 {
-    public abstract InputHost InputHost { get; }
+    public abstract Connector Connector { get; }
+    public abstract ConnectorDirection Direction { get; }
+
     [JsonIgnore]
     public override string PartitionKey => Id;
 }
