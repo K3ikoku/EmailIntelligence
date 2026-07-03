@@ -4,6 +4,7 @@ using EmailIntelligence.Domain.Entities.CosmosDocuments;
 using EmailIntelligence.Domain.Persistence;
 using EmailIntelligence.Infrastructure.Secrets;
 using EmailIntelligence.Infrastructure.Services;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace EmailIntelligence.Tests.Unit.Services;
 
@@ -18,7 +19,8 @@ public class ConfigurationServiceTests
         _secretStore,
         _connectors,
         new ImapInputConfigurationValidator(),
-        new NotionOutputConfigurationValidator());
+        new NotionOutputConfigurationValidator(),
+        NullLogger<ConfigurationService>.Instance);
 
     private static ImapInputConfiguration ImapConfig(
         string host = "imap.example.com", string username = "user@example.com", int port = 993) => new()

@@ -12,7 +12,7 @@
       <PackageReference Include="Azure.Identity" Version="1.21.0" />
       <PackageReference Include="Azure.Security.KeyVault.Secrets" Version="4.11.0" />
       <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
-      <PackageReference Include="MailKit" Version="4.14.1" />
+      <PackageReference Include="MailKit" Version="4.17.0" />
       <!-- Pinned: AI 3.x is incompatible with the Functions isolated worker AI stack
            (Worker.ApplicationInsights 2.51.0 -> PerfCounterCollector 2.23.0) and crashes the
            worker with a TypeLoadException on ITelemetryInitializer. Do NOT bump (e.g. via

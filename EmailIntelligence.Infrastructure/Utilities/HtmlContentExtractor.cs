@@ -215,8 +215,8 @@ public static partial class HtmlContentExtractor
 
     private static bool MatchesIgnoredIdOrClass(HtmlNode node, HtmlExtractionOptions options)
     {
-        var id = node.GetAttributeValue("id", null);
-        var classAttr = node.GetAttributeValue("class", null);
+        var id = node.GetAttributeValue("id", string.Empty);
+        var classAttr = node.GetAttributeValue("class", string.Empty);
 
         foreach (var token in options.IgnoreElementIdsOrClasses)
         {
@@ -236,7 +236,7 @@ public static partial class HtmlContentExtractor
 
     private static bool IsHidden(HtmlNode node)
     {
-        var style = node.GetAttributeValue("style", null);
+        var style = node.GetAttributeValue("style", string.Empty);
         if (string.IsNullOrEmpty(style))
             return false;
 
@@ -302,7 +302,7 @@ public static partial class HtmlContentExtractor
 
             case "a":
             {
-                var href = node.GetAttributeValue("href", null);
+                var href = node.GetAttributeValue("href", string.Empty);
                 var effective = string.IsNullOrWhiteSpace(href) ? currentHref : href;
                 foreach (var child in node.ChildNodes)
                     CollectNode(child, effective, runs);
@@ -408,9 +408,9 @@ public static partial class HtmlContentExtractor
     {
         // Prefer src; some newsletters lazy-load via data-src / data-original.
         var url = FirstNonEmpty(
-            img.GetAttributeValue("src", null),
-            img.GetAttributeValue("data-src", null),
-            img.GetAttributeValue("data-original", null));
+            img.GetAttributeValue("src", string.Empty),
+            img.GetAttributeValue("data-src", string.Empty),
+            img.GetAttributeValue("data-original", string.Empty));
 
         if (string.IsNullOrWhiteSpace(url)) return;
 
@@ -424,7 +424,7 @@ public static partial class HtmlContentExtractor
             return;
         }
 
-        var alt = img.GetAttributeValue("alt", null);
+        var alt = img.GetAttributeValue("alt", string.Empty);
         if (string.IsNullOrWhiteSpace(alt)) alt = null;
 
         blocks.Add(new ImageBlock

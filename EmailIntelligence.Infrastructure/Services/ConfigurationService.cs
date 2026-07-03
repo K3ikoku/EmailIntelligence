@@ -4,6 +4,7 @@ using EmailIntelligence.Domain.Entities.CosmosDocuments;
 using EmailIntelligence.Domain.Persistence;
 using EmailIntelligence.Infrastructure.Secrets;
 using EmailIntelligence.Infrastructure.Services.Interfaces;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace EmailIntelligence.Infrastructure.Services;
@@ -12,7 +13,8 @@ public sealed class ConfigurationService(
     ISecretStore secretStore,
     IRepository<ConnectorConfiguration> connectors,
     IValidateOptions<ImapInputConfiguration> imapValidator,
-    IValidateOptions<NotionOutputConfiguration> notionValidator) : IConfigurationService
+    IValidateOptions<NotionOutputConfiguration> notionValidator,
+    ILogger<ConfigurationService> logger) : IConfigurationService
 {
     public async Task<ConfigurationResult<ImapInputConfiguration>> UpsertImapInputConfigurationAsync(
         ImapInputConfiguration configuration,
@@ -28,6 +30,7 @@ public sealed class ConfigurationService(
 
         await secretStore.SetSecretAsync(configuration.ImapPasswordId, password, cancellationToken);
         await connectors.UpsertAsync(configuration, cancellationToken);
+        logger.LogInformation("IMAP input configuration {ConnectorId} upserted.", configuration.Id);
         return ConfigurationResult<ImapInputConfiguration>.Success(configuration);
     }
 
@@ -45,6 +48,7 @@ public sealed class ConfigurationService(
 
         await secretStore.SetSecretAsync(configuration.AuthTokenId.ToString(), authToken, cancellationToken);
         await connectors.UpsertAsync(configuration, cancellationToken);
+        logger.LogInformation("Notion output configuration {ConnectorId} upserted.", configuration.Id);
         return ConfigurationResult<NotionOutputConfiguration>.Success(configuration);
     }
 
@@ -65,6 +69,7 @@ public sealed class ConfigurationService(
             await secretStore.DeleteSecretAsync(secretName, cancellationToken);
 
         await connectors.DeleteAsync(id, id, cancellationToken);
+        logger.LogInformation("Connector {ConnectorId} deleted.", id);
         return true;
     }
 }

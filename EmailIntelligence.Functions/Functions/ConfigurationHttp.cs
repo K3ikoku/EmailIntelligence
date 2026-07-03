@@ -25,7 +25,7 @@ internal static class ConfigurationHttp
         if (result.Succeeded)
             return new OkObjectResult(result.Value);
 
-        logger.LogInformation("Configuration create rejected: {Errors}", string.Join("; ", result.Errors));
+        logger.LogInformation("Configuration request rejected: {Errors}", string.Join("; ", result.Errors));
         return new BadRequestObjectResult(result.Errors);
     }
 }

@@ -41,7 +41,7 @@ public class EmailNotionMapperService(IOptions<NotionOptions> options) : IEmailN
             new()
             {
                 Name = options.Value.Properties.First().Name,
-                Value = ToPropertyValue(NotionPropertyType.Title, $"{title}")
+                Value = ToPropertyValue(NotionPropertyType.Title, title)
             }
         };
         foreach (var property in options.Value.Properties.Skip(1))

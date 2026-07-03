@@ -43,11 +43,13 @@ public sealed class NotionApiClient(INotionClient client, IOptions<NotionOptions
     private Dictionary<string, PropertyValue> BuildProperties(IEnumerable<Property> propertiesList)
     {
         var properties = propertiesList.ToList();
-        var propertyDictionary = new Dictionary<string, PropertyValue>(properties.Count + 1);
+        var propertyDictionary = new Dictionary<string, PropertyValue>();
         foreach (var rule in options.Value.Properties)
         {
-            var property = properties.Single(p => p.Name == rule.Name);
-            propertyDictionary[property.Name] = property.Value;
+            var property = properties.FirstOrDefault(p => p.Name == rule.Name)
+                ?? throw new InvalidOperationException(
+                    $"The mapped email draft is missing the configured Notion property '{rule.Name}'.");
+            propertyDictionary[rule.Name] = property.Value;
         }
 
         return propertyDictionary;

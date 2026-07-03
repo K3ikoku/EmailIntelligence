@@ -22,7 +22,7 @@ public class NewsletterPipelineServiceTests
         var config = new TelemetryConfiguration
         {
             TelemetryChannel = _channel,
-            InstrumentationKey = "00000000-0000-0000-0000-000000000000"
+            ConnectionString = "InstrumentationKey=00000000-0000-0000-0000-000000000000"
         };
 
         return new NewsletterPipelineService(

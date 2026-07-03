@@ -3,6 +3,7 @@ using EmailIntelligence.Domain.Entities.CosmosDocuments;
 using EmailIntelligence.Domain.Enums;
 using EmailIntelligence.Domain.Persistence;
 using EmailIntelligence.Infrastructure.Services;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace EmailIntelligence.Tests.Unit.Services;
 
@@ -10,7 +11,8 @@ public class FeedProfileServiceTests
 {
     private readonly IRepository<FeedProfile> _repository = Substitute.For<IRepository<FeedProfile>>();
 
-    private FeedProfileService Sut => new(new FeedProfileValidator(), _repository);
+    private FeedProfileService Sut =>
+        new(new FeedProfileValidator(), _repository, NullLogger<FeedProfileService>.Instance);
 
     private static FeedProfile Profile(
         string name = "Tech", string inputId = "input-1", string outputId = "output-1") => new()

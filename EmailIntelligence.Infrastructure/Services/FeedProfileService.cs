@@ -1,13 +1,15 @@
 using EmailIntelligence.Domain.Entities.CosmosDocuments;
 using EmailIntelligence.Domain.Persistence;
 using EmailIntelligence.Infrastructure.Services.Interfaces;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace EmailIntelligence.Infrastructure.Services;
 
 public sealed class FeedProfileService(
     IValidateOptions<FeedProfile> validator,
-    IRepository<FeedProfile> repository) : IFeedProfileService
+    IRepository<FeedProfile> repository,
+    ILogger<FeedProfileService> logger) : IFeedProfileService
 {
     public async Task<ConfigurationResult<FeedProfile>> UpsertFeedProfileAsync(
         FeedProfile feedProfile, CancellationToken cancellationToken = default)
@@ -20,18 +22,19 @@ public sealed class FeedProfileService(
             return ConfigurationResult<FeedProfile>.Failure(validation.Failures ?? []);
 
         var stored = await repository.UpsertAsync(feedProfile, cancellationToken);
+        logger.LogInformation("Feed profile {FeedProfileId} upserted.", stored.Id);
         return ConfigurationResult<FeedProfile>.Success(stored);
     }
 
     public async Task<bool> DeleteFeedProfileAsync(string id, CancellationToken cancellationToken = default)
     {
-        // Feed profiles partition by InputId, not id, so find the document to learn its partition key.
         var matches = await repository.QueryAsync(profile => profile.Id == id, cancellationToken);
         var existing = matches.FirstOrDefault();
         if (existing is null)
             return false;
 
         await repository.DeleteAsync(existing.Id, existing.PartitionKey, cancellationToken);
+        logger.LogInformation("Feed profile {FeedProfileId} deleted.", id);
         return true;
     }
 }

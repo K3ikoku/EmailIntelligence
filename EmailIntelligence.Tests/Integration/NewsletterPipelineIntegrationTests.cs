@@ -19,12 +19,12 @@ public class NewsletterPipelineIntegrationTests
     {
         var emailService = new EmailService(mail);
         var mapper = new EmailNotionMapperService(NotionOptionsFactory.AsOptions());
-        var notionService = new NotionService(notion);
+        var notionService = new NotionService(notion, NullLogger<NotionService>.Instance);
 
         var telemetry = new TelemetryClient(new TelemetryConfiguration
         {
             TelemetryChannel = new StubTelemetryChannel(),
-            InstrumentationKey = "00000000-0000-0000-0000-000000000000"
+            ConnectionString = "InstrumentationKey=00000000-0000-0000-0000-000000000000"
         });
 
         return new NewsletterPipelineService(

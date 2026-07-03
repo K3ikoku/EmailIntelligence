@@ -91,12 +91,11 @@ public class EmailServiceTests
     [Fact]
     public async Task MoveProcessedEmailsAsync_throws_when_nothing_moved()
     {
-        // Characterizes current behaviour: a no-op move is treated as a failure. See review notes.
         var client = Substitute.For<IMailKitClient>();
         client.MoveToFolderAsync(Arg.Any<IEnumerable<string>>())
-            .Returns(Array.Empty<UniqueId>());
+            .Returns([]);
 
-        await Should.ThrowAsync<Exception>(
+        await Should.ThrowAsync<InvalidOperationException>(
             () => new EmailService(client).MoveProcessedEmailsAsync(["m1"]));
     }
 }

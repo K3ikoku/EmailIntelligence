@@ -42,7 +42,8 @@ public class EmailService(IMailKitClient mailKitClient) : IEmailService
         var ids = await mailKitClient.MoveToFolderAsync(messageIds);
         if (!ids.Any())
         {
-            throw new Exception("Failed to move email to processed folder");
+            throw new InvalidOperationException(
+                "No emails were moved to the processed folder: none of the processed message ids were found in the inbox.");
         }
     }
 }
