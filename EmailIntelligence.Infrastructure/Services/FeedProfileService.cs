@@ -9,7 +9,7 @@ public sealed class FeedProfileService(
     IValidateOptions<FeedProfile> validator,
     IRepository<FeedProfile> repository) : IFeedProfileService
 {
-    public async Task<ConfigurationResult<FeedProfile>> CreateFeedProfileAsync(
+    public async Task<ConfigurationResult<FeedProfile>> UpsertFeedProfileAsync(
         FeedProfile feedProfile, CancellationToken cancellationToken = default)
     {
         if (feedProfile is null)
@@ -19,7 +19,19 @@ public sealed class FeedProfileService(
         if (validation.Failed)
             return ConfigurationResult<FeedProfile>.Failure(validation.Failures ?? []);
 
-        var created = await repository.CreateAsync(feedProfile, cancellationToken);
-        return ConfigurationResult<FeedProfile>.Success(created);
+        var stored = await repository.UpsertAsync(feedProfile, cancellationToken);
+        return ConfigurationResult<FeedProfile>.Success(stored);
+    }
+
+    public async Task<bool> DeleteFeedProfileAsync(string id, CancellationToken cancellationToken = default)
+    {
+        // Feed profiles partition by InputId, not id, so find the document to learn its partition key.
+        var matches = await repository.QueryAsync(profile => profile.Id == id, cancellationToken);
+        var existing = matches.FirstOrDefault();
+        if (existing is null)
+            return false;
+
+        await repository.DeleteAsync(existing.Id, existing.PartitionKey, cancellationToken);
+        return true;
     }
 }

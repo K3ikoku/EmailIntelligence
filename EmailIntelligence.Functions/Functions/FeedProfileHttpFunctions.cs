@@ -16,30 +16,55 @@ public sealed class FeedProfileHttpFunctions(
     IFeedProfileService feedProfileService,
     ILogger<FeedProfileHttpFunctions> logger)
 {
-    [Function(nameof(CreateFeedProfile))]
-    [OpenApiOperation(operationId: "CreateFeedProfile", tags: new[] { "Feed Profiles" },
-        Summary = "Create a feed profile",
-        Description = "Wires an input connector to an output connector and persists the profile.")]
+    [Function(nameof(UpsertFeedProfile))]
+    [OpenApiOperation(operationId: "UpsertFeedProfile", tags: ["Feed Profiles"],
+        Summary = "Create or update a feed profile",
+        Description = "Wires an input connector to an output connector and persists the profile. "
+                      + "Pass an existing id in the body to update, or omit it to create.")]
     [OpenApiSecurity("function_key", SecuritySchemeType.ApiKey,
         Name = "x-functions-key", In = OpenApiSecurityLocationType.Header)]
     [OpenApiRequestBody(contentType: "application/json", bodyType: typeof(CreateFeedProfileRequest),
-        Required = true, Description = "The feed profile: its input/output connector ids, match/processing rules and front.")]
+        Required = true,
+        Description = "The feed profile: its input/output connector ids, match/processing rules and front.")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json",
-        bodyType: typeof(FeedProfile), Summary = "The created feed profile.")]
+        bodyType: typeof(FeedProfile), Summary = "The saved feed profile.")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json",
         bodyType: typeof(IEnumerable<string>), Summary = "Validation errors.")]
-    public async Task<IActionResult> CreateFeedProfile(
-        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "configurations/feed-profiles")] HttpRequest request)
+    public async Task<IActionResult> UpsertFeedProfile(
+        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "configurations/feed-profiles")]
+        HttpRequest request)
     {
-        logger.LogInformation("Create feed profile requested.");
+        logger.LogInformation("Upsert feed profile requested.");
 
         var contract = await ConfigurationHttp.DeserializeAsync<CreateFeedProfileRequest>(request);
         if (contract is null)
             return new BadRequestObjectResult(new[] { "A JSON request body is required." });
 
-        var result = await feedProfileService.CreateFeedProfileAsync(
+        var result = await feedProfileService.UpsertFeedProfileAsync(
             contract.ToFeedProfile(), request.HttpContext.RequestAborted);
 
         return ConfigurationHttp.ToActionResult(result, logger);
+    }
+
+    [Function(nameof(DeleteFeedProfile))]
+    [OpenApiOperation(operationId: "DeleteFeedProfile", tags: ["Feed Profiles"],
+        Summary = "Delete a feed profile",
+        Description = "Deletes the feed profile with the given id.")]
+    [OpenApiSecurity("function_key", SecuritySchemeType.ApiKey,
+        Name = "x-functions-key", In = OpenApiSecurityLocationType.Header)]
+    [OpenApiParameter(name: "id", In = ParameterLocation.Path, Required = true, Type = typeof(string),
+        Description = "The feed profile id.")]
+    [OpenApiResponseWithoutBody(statusCode: HttpStatusCode.NoContent, Summary = "The feed profile was deleted.")]
+    [OpenApiResponseWithoutBody(statusCode: HttpStatusCode.NotFound, Summary = "No feed profile with that id exists.")]
+    public async Task<IActionResult> DeleteFeedProfile(
+        [HttpTrigger(AuthorizationLevel.Function, "delete", Route = "configurations/feed-profiles/{id}")]
+        HttpRequest request,
+        string id)
+    {
+        logger.LogInformation("Delete feed profile {FeedProfileId} requested.", id);
+
+        var deleted = await feedProfileService.DeleteFeedProfileAsync(id, request.HttpContext.RequestAborted);
+
+        return deleted ? new NoContentResult() : new NotFoundResult();
     }
 }

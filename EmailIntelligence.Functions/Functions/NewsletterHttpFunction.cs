@@ -16,7 +16,7 @@ public sealed class NewsletterHttpFunction(
     ILogger<NewsletterHttpFunction> logger)
 {
     [Function(nameof(NewsletterHttpFunction))]
-    [OpenApiOperation(operationId: "RunNewsletterPipeline", tags: new[] { "Newsletter" },
+    [OpenApiOperation(operationId: "RunNewsletterPipeline", tags: ["Newsletter"],
         Summary = "Run the newsletter pipeline",
         Description = "Fetches unread newsletter emails over IMAP and creates the matching Notion pages, "
                       + "then returns whether the run completed successfully.")]

@@ -5,6 +5,7 @@ namespace EmailIntelligence.Functions.Contracts;
 
 public sealed class CreateFeedProfileRequest
 {
+    public string? Id { get; init; }
     public string? Name { get; init; }
     public bool Enabled { get; init; } = true;
     public string? InputId { get; init; }
@@ -13,14 +14,22 @@ public sealed class CreateFeedProfileRequest
     public IReadOnlyList<string>? Processing { get; init; }
     public Front Front { get; init; }
 
-    public FeedProfile ToFeedProfile() => new()
+    public FeedProfile ToFeedProfile()
     {
-        Name = Name ?? string.Empty,
-        Enabled = Enabled,
-        InputId = InputId ?? string.Empty,
-        OutputId = OutputId ?? string.Empty,
-        MatchRule = MatchRule ?? [],
-        Processing = Processing ?? [],
-        Front = Front
-    };
+        var feedProfile = new FeedProfile
+        {
+            Name = Name ?? string.Empty,
+            Enabled = Enabled,
+            InputId = InputId ?? string.Empty,
+            OutputId = OutputId ?? string.Empty,
+            MatchRule = MatchRule ?? [],
+            Processing = Processing ?? [],
+            Front = Front
+        };
+
+        if (!string.IsNullOrWhiteSpace(Id))
+            feedProfile.Id = Id;
+
+        return feedProfile;
+    }
 }

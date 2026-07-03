@@ -5,9 +5,11 @@ namespace EmailIntelligence.Infrastructure.Services.Interfaces;
 
 public interface IConfigurationService
 {
-    Task<ConfigurationResult<ImapInputConfiguration>> CreateImapInputConfigurationAsync(
+    Task<ConfigurationResult<ImapInputConfiguration>> UpsertImapInputConfigurationAsync(
         ImapInputConfiguration configuration, string password, CancellationToken cancellationToken = default);
 
-    Task<ConfigurationResult<NotionOutputConfiguration>> CreateNotionOutputConfigurationAsync(
+    Task<ConfigurationResult<NotionOutputConfiguration>> UpsertNotionOutputConfigurationAsync(
         NotionOutputConfiguration configuration, string authToken, CancellationToken cancellationToken = default);
+
+    Task<bool> DeleteConnectorAsync(string id, CancellationToken cancellationToken = default);
 }
