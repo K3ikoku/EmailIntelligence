@@ -7,14 +7,14 @@ using Microsoft.Extensions.Logging;
 
 namespace EmailIntelligence.Infrastructure.Services;
 
-public class NewsletterPipelineService(
+public class ConsumeFeedPipelineService(
     IEmailService emailService,
     IEmailNotionMapperService mapperService,
     INotionService notionService,
     TelemetryClient telemetryClient,
-    ILogger<NewsletterPipelineService> logger) : INewsletterPipelineService
+    ILogger<ConsumeFeedPipelineService> logger) : INewsletterPipelineService
 {
-    private const string RunCompletedEvent = "NewsletterRunCompleted";
+    private const string RunCompletedEvent = "ConsumeFeedRunCompleted";
 
     public async Task<bool> ProcessEmails()
     {
@@ -22,7 +22,7 @@ public class NewsletterPipelineService(
         using var _ = logger.BeginScope(new Dictionary<string, object> { ["RunId"] = runId });
         var stopwatch = Stopwatch.StartNew();
 
-        logger.LogInformation("Newsletter pipeline run {RunId} started.", runId);
+        logger.LogInformation("Consume feed pipeline run {RunId} started.", runId);
 
         try
         {
@@ -43,14 +43,14 @@ public class NewsletterPipelineService(
 
             stopwatch.Stop();
 
-            telemetryClient.GetMetric("Newsletter.EmailsFetched").TrackValue(emails.Count);
-            telemetryClient.GetMetric("Newsletter.PagesProcessed").TrackValue(processedIds.Count);
-            telemetryClient.GetMetric("Newsletter.RunDurationMs").TrackValue(stopwatch.Elapsed.TotalMilliseconds);
+            telemetryClient.GetMetric("ConsumeFeed.EmailsFetched").TrackValue(emails.Count);
+            telemetryClient.GetMetric("ConsumeFeed.PagesProcessed").TrackValue(processedIds.Count);
+            telemetryClient.GetMetric("ConsumeFeed.RunDurationMs").TrackValue(stopwatch.Elapsed.TotalMilliseconds);
 
             TrackRunCompleted("Success", runId, stopwatch.Elapsed, emails.Count, processedIds.Count);
 
             logger.LogInformation(
-                "Newsletter pipeline run {RunId} completed in {DurationMs:F0} ms (fetched {EmailsFetched}, processed {PagesProcessed}).",
+                "Consume feed pipeline run {RunId} completed in {DurationMs:F0} ms (fetched {EmailsFetched}, processed {PagesProcessed}).",
                 runId, stopwatch.Elapsed.TotalMilliseconds, emails.Count, processedIds.Count);
 
             return true;
@@ -67,7 +67,7 @@ public class NewsletterPipelineService(
             TrackRunCompleted("Failed", runId, stopwatch.Elapsed, emailsFetched: null, pagesProcessed: null);
 
             logger.LogError(ex,
-                "Newsletter pipeline run {RunId} failed after {DurationMs:F0} ms.",
+                "Consume feed pipeline run {RunId} failed after {DurationMs:F0} ms.",
                 runId, stopwatch.Elapsed.TotalMilliseconds);
 
             throw;
