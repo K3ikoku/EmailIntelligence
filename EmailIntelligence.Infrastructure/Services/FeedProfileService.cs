@@ -11,6 +11,11 @@ public sealed class FeedProfileService(
     IRepository<FeedProfile> repository,
     ILogger<FeedProfileService> logger) : IFeedProfileService
 {
+    public async Task<IEnumerable<FeedProfile>> GetAllFeedProfilesAsync(CancellationToken cancellationToken = default)
+    {
+        return await repository.QueryAsync(x => x.Enabled, cancellationToken);
+    }
+    
     public async Task<ConfigurationResult<FeedProfile>> UpsertFeedProfileAsync(
         FeedProfile feedProfile, CancellationToken cancellationToken = default)
     {

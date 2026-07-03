@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using EmailIntelligence.Infrastructure.Services.Interfaces;
 using Microsoft.ApplicationInsights;
@@ -8,9 +9,7 @@ using Microsoft.Extensions.Logging;
 namespace EmailIntelligence.Infrastructure.Services;
 
 public class ConsumeFeedPipelineService(
-    IEmailService emailService,
-    IEmailNotionMapperService mapperService,
-    INotionService notionService,
+    IFeedProfileService feedProfileService,
     TelemetryClient telemetryClient,
     ILogger<ConsumeFeedPipelineService> logger) : INewsletterPipelineService
 {
@@ -26,32 +25,33 @@ public class ConsumeFeedPipelineService(
 
         try
         {
-            var emails = (await emailService.GetAndCleanEmails()).ToList();
-            logger.LogInformation("Fetched {EmailsFetched} email(s) from IMAP.", emails.Count);
-
-            var notionPageDrafts = emails.Select(mapperService.MapEmail).ToList();
-
-            var processedIds = (await notionService.CreatePage(notionPageDrafts)).ToList();
-            logger.LogInformation("Processed {PagesProcessed} Notion page(s).", processedIds.Count);
-
-            if (processedIds.Count > 0)
-            {
-                await emailService.MoveProcessedEmailsAsync(processedIds);
-                logger.LogInformation("Moved {MovedCount} processed email(s) to the processed folder.",
-                    processedIds.Count);
-            }
-
-            stopwatch.Stop();
-
-            telemetryClient.GetMetric("ConsumeFeed.EmailsFetched").TrackValue(emails.Count);
-            telemetryClient.GetMetric("ConsumeFeed.PagesProcessed").TrackValue(processedIds.Count);
-            telemetryClient.GetMetric("ConsumeFeed.RunDurationMs").TrackValue(stopwatch.Elapsed.TotalMilliseconds);
-
-            TrackRunCompleted("Success", runId, stopwatch.Elapsed, emails.Count, processedIds.Count);
-
-            logger.LogInformation(
-                "Consume feed pipeline run {RunId} completed in {DurationMs:F0} ms (fetched {EmailsFetched}, processed {PagesProcessed}).",
-                runId, stopwatch.Elapsed.TotalMilliseconds, emails.Count, processedIds.Count);
+            var feedsToProcess = await feedProfileService.GetAllFeedProfilesAsync();
+            // var emails = (await emailService.GetAndCleanEmails()).ToList();
+            // logger.LogInformation("Fetched {EmailsFetched} email(s) from IMAP.", emails.Count);
+            //
+            // var notionPageDrafts = emails.Select(mapperService.MapEmail).ToList();
+            //
+            // var processedIds = (await notionService.CreatePage(notionPageDrafts)).ToList();
+            // logger.LogInformation("Processed {PagesProcessed} Notion page(s).", processedIds.Count);
+            //
+            // if (processedIds.Count > 0)
+            // {
+            //     await emailService.MoveProcessedEmailsAsync(processedIds);
+            //     logger.LogInformation("Moved {MovedCount} processed email(s) to the processed folder.",
+            //         processedIds.Count);
+            // }
+            //
+            // stopwatch.Stop();
+            //
+            // telemetryClient.GetMetric("ConsumeFeed.EmailsFetched").TrackValue(emails.Count);
+            // telemetryClient.GetMetric("ConsumeFeed.PagesProcessed").TrackValue(processedIds.Count);
+            // telemetryClient.GetMetric("ConsumeFeed.RunDurationMs").TrackValue(stopwatch.Elapsed.TotalMilliseconds);
+            //
+            // TrackRunCompleted("Success", runId, stopwatch.Elapsed, emails.Count, processedIds.Count);
+            //
+            // logger.LogInformation(
+            //     "Consume feed pipeline run {RunId} completed in {DurationMs:F0} ms (fetched {EmailsFetched}, processed {PagesProcessed}).",
+            //     runId, stopwatch.Elapsed.TotalMilliseconds, emails.Count, processedIds.Count);
 
             return true;
         }

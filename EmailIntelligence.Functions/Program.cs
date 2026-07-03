@@ -120,6 +120,9 @@ file sealed class UnavailableConfigurationService : IConfigurationService
 
 file sealed class UnavailableFeedProfileService : IFeedProfileService
 {
+    public Task<IEnumerable<FeedProfile>> GetAllFeedProfilesAsync(CancellationToken cancellationToken = default) =>
+        throw CosmosNotConfigured();
+
     public Task<ConfigurationResult<FeedProfile>> UpsertFeedProfileAsync(
         FeedProfile feedProfile, CancellationToken cancellationToken = default) =>
         throw CosmosNotConfigured();
