@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using EmailIntelligence.Domain.Enums;
 using EmailIntelligence.Domain.Persistence;
+using Microsoft.Extensions.Options;
 
 namespace EmailIntelligence.Domain.Entities.CosmosDocuments;
 
@@ -16,4 +17,28 @@ public sealed record FeedProfile : Document
     
     [JsonIgnore]
     public override string PartitionKey => InputId;
+}
+
+public sealed class FeedProfileValidator : IValidateOptions<FeedProfile>
+{
+    public ValidateOptionsResult Validate(string? name, FeedProfile options)
+    {
+        var failures = new List<string>();
+
+        if (string.IsNullOrWhiteSpace(options.Name))
+            failures.Add($"{nameof(FeedProfile.Name)} is required.");
+
+        if (string.IsNullOrWhiteSpace(options.InputId))
+            failures.Add($"{nameof(FeedProfile.InputId)} is required.");
+
+        if (string.IsNullOrWhiteSpace(options.OutputId))
+            failures.Add($"{nameof(FeedProfile.OutputId)} is required.");
+
+        if (!Enum.IsDefined(options.Front))
+            failures.Add($"{nameof(FeedProfile.Front)} is not a valid value.");
+
+        return failures.Count == 0
+            ? ValidateOptionsResult.Success
+            : ValidateOptionsResult.Fail(failures);
+    }
 }

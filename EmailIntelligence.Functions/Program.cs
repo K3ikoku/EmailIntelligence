@@ -43,6 +43,7 @@ builder.Services.AddTransient<IMailKitClient, MailKitClient>();
 builder.Services.AddTransient<IConfigurationService, ConfigurationService>();
 builder.Services.AddSingleton<IValidateOptions<ImapInputConfiguration>, ImapInputConfigurationValidator>();
 builder.Services.AddSingleton<IValidateOptions<NotionOutputConfiguration>, NotionOutputConfigurationValidator>();
+builder.Services.AddSingleton<IValidateOptions<FeedProfile>, FeedProfileValidator>();
 
 // Notion client
 builder.Services.AddNotionClient(options =>
@@ -57,6 +58,9 @@ if (!string.IsNullOrWhiteSpace(builder.Configuration["Cosmos:AccountEndpoint"]) 
         .AddCosmosPersistence(builder.Configuration)
         .AddCosmosContainer<ConnectorConfiguration>("connectors", "/id")
         .AddCosmosContainer<FeedProfile>("feed-profiles", "/id");
+
+    // Feed profiles are persisted, so the service is only available when Cosmos is configured.
+    builder.Services.AddTransient<IFeedProfileService, FeedProfileService>();
 }
 
 // OpenAPI 

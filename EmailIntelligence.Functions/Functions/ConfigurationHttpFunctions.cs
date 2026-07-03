@@ -1,9 +1,7 @@
 using System.Net;
-using System.Text.Json;
 using EmailIntelligence.Domain.Entities.Configurations;
 using EmailIntelligence.Domain.Entities.Configurations.Notion;
 using EmailIntelligence.Functions.Contracts;
-using EmailIntelligence.Infrastructure.Services;
 using EmailIntelligence.Infrastructure.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -36,7 +34,7 @@ public sealed class ConfigurationHttpFunctions(
     {
         logger.LogInformation("Create IMAP input configuration requested.");
 
-        var contract = await DeserializeAsync<CreateImapInputConfigurationRequest>(request);
+        var contract = await ConfigurationHttp.DeserializeAsync<CreateImapInputConfigurationRequest>(request);
         if (contract is null)
             return new BadRequestObjectResult(new[] { "A JSON request body is required." });
 
@@ -47,7 +45,7 @@ public sealed class ConfigurationHttpFunctions(
         var result = await configurationService.CreateImapInputConfigurationAsync(
             contract.ToConfiguration(), contract.Password ?? string.Empty, request.HttpContext.RequestAborted);
 
-        return ToActionResult(result);
+        return ConfigurationHttp.ToActionResult(result, logger);
     }
 
     [Function(nameof(CreateNotionOutputConfiguration))]
@@ -67,7 +65,7 @@ public sealed class ConfigurationHttpFunctions(
     {
         logger.LogInformation("Create Notion output configuration requested.");
 
-        var contract = await DeserializeAsync<CreateNotionOutputConfigurationRequest>(request);
+        var contract = await ConfigurationHttp.DeserializeAsync<CreateNotionOutputConfigurationRequest>(request);
         if (contract is null)
             return new BadRequestObjectResult(new[] { "A JSON request body is required." });
 
@@ -78,27 +76,6 @@ public sealed class ConfigurationHttpFunctions(
         var result = await configurationService.CreateNotionOutputConfigurationAsync(
             contract.ToConfiguration(), contract.AuthToken ?? string.Empty, request.HttpContext.RequestAborted);
 
-        return ToActionResult(result);
-    }
-
-    private static async Task<T?> DeserializeAsync<T>(HttpRequest request) where T : class
-    {
-        try
-        {
-            return await request.ReadFromJsonAsync<T>();
-        }
-        catch (Exception ex) when (ex is JsonException or InvalidOperationException)
-        {
-            return null;
-        }
-    }
-
-    private IActionResult ToActionResult<T>(ConfigurationResult<T> result)
-    {
-        if (result.Succeeded)
-            return new OkObjectResult(result.Value);
-
-        logger.LogInformation("Configuration create rejected: {Errors}", string.Join("; ", result.Errors));
-        return new BadRequestObjectResult(result.Errors);
+        return ConfigurationHttp.ToActionResult(result, logger);
     }
 }
